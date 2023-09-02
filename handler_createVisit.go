@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
@@ -15,7 +16,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
     Country string `json:"country"`
     IP string `json:"ip"`
     VisitStat string `json:"status"`
-    Domain string `json:"domain"`
+    Domain uuid.UUID `json:"domain"`
     VisitFrom string `json:"visitFrom"`
   }
   decoder := json.NewDecoder(r.Body)

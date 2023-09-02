@@ -63,6 +63,12 @@ func main() {
   v1Router.Get("/err",handlerErr)
   v1Router.Post("/users",apiCfg.handlerCreateUser)
   v1Router.Post("/visit",apiCfg.handlerCreateVisit)
+  v1Router.Get("/users", apiCfg.handlerGetUser)
+  v1Router.Get("/domain",apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
+  v1Router.Post("/domain", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
+  v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
+	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowsGet))
+  
   r.Mount("/v1", v1Router)
 
 	fmt.Println("listening on port:" + portString)

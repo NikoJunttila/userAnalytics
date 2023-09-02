@@ -10,11 +10,30 @@ import (
 	"github.com/google/uuid"
 )
 
+type Domain struct {
+	ID          uuid.UUID
+	OwnerID     uuid.UUID
+	Name        string
+	Url         string
+	TotalVisits int32
+	TotalUnique int32
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type DomainFollow struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UserID    uuid.UUID
+	DomainID  uuid.UUID
+}
+
 type User struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
+	ApiKey    string
 }
 
 type Visit struct {
@@ -23,6 +42,6 @@ type Visit struct {
 	Country       string
 	Ip            string
 	Visitorstatus string
-	Domain        string
+	Domain        uuid.UUID
 	Visitfrom     string
 }

@@ -8,6 +8,8 @@ package database
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const createVisit = `-- name: CreateVisit :one
@@ -22,7 +24,7 @@ type CreateVisitParams struct {
 	Country       string
 	Ip            string
 	Visitorstatus string
-	Domain        string
+	Domain        uuid.UUID
 	Visitfrom     string
 }
 
