@@ -13,9 +13,9 @@ import (
 )
 
 const createDomain = `-- name: CreateDomain :one
-INSERT INTO domains (id, owner_id,name,url,total_visits,total_unique,created_at,updated_at)
-VALUES ($1, $2, $3, $4, $5, $6,$7,$8)
-RETURNING id, owner_id, name, url, total_visits, total_unique, created_at, updated_at
+INSERT INTO domains (id, owner_id,name,url,total_visits,total_unique,total_time,created_at,updated_at)
+VALUES ($1, $2, $3, $4, $5, $6,$7,$8,$9)
+RETURNING id, owner_id, name, url, total_visits, total_unique, total_time, created_at, updated_at
 `
 
 type CreateDomainParams struct {
@@ -25,6 +25,7 @@ type CreateDomainParams struct {
 	Url         string
 	TotalVisits int32
 	TotalUnique int32
+	TotalTime   int32
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -37,6 +38,7 @@ func (q *Queries) CreateDomain(ctx context.Context, arg CreateDomainParams) (Dom
 		arg.Url,
 		arg.TotalVisits,
 		arg.TotalUnique,
+		arg.TotalTime,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -48,6 +50,7 @@ func (q *Queries) CreateDomain(ctx context.Context, arg CreateDomainParams) (Dom
 		&i.Url,
 		&i.TotalVisits,
 		&i.TotalUnique,
+		&i.TotalTime,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -56,7 +59,7 @@ func (q *Queries) CreateDomain(ctx context.Context, arg CreateDomainParams) (Dom
 
 const getDomain = `-- name: GetDomain :one
 
-Select id, owner_id, name, url, total_visits, total_unique, created_at, updated_at FROM domains WHERE id = $1
+Select id, owner_id, name, url, total_visits, total_unique, total_time, created_at, updated_at FROM domains WHERE id = $1
 `
 
 func (q *Queries) GetDomain(ctx context.Context, id uuid.UUID) (Domain, error) {
@@ -69,6 +72,7 @@ func (q *Queries) GetDomain(ctx context.Context, id uuid.UUID) (Domain, error) {
 		&i.Url,
 		&i.TotalVisits,
 		&i.TotalUnique,
+		&i.TotalTime,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -76,7 +80,7 @@ func (q *Queries) GetDomain(ctx context.Context, id uuid.UUID) (Domain, error) {
 }
 
 const getDomains = `-- name: GetDomains :many
-SELECT id, owner_id, name, url, total_visits, total_unique, created_at, updated_at FROM domains
+SELECT id, owner_id, name, url, total_visits, total_unique, total_time, created_at, updated_at FROM domains
 `
 
 func (q *Queries) GetDomains(ctx context.Context) ([]Domain, error) {
@@ -95,6 +99,7 @@ func (q *Queries) GetDomains(ctx context.Context) ([]Domain, error) {
 			&i.Url,
 			&i.TotalVisits,
 			&i.TotalUnique,
+			&i.TotalTime,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

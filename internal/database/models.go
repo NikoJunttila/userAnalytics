@@ -17,6 +17,7 @@ type Domain struct {
 	Url         string
 	TotalVisits int32
 	TotalUnique int32
+	TotalTime   int32
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -37,11 +38,9 @@ type User struct {
 }
 
 type Visit struct {
-	ID            string
 	Createdat     time.Time
-	Country       string
-	Ip            string
 	Visitorstatus string
+	Visitduration int32
 	Domain        uuid.UUID
 	Visitfrom     string
 }

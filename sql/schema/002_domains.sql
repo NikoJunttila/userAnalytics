@@ -7,6 +7,7 @@ CREATE TABLE domains (
   url TEXT NOT NULL,
   total_visits INT NOT NULL,
   total_unique INT NOT NULL,
+  total_time int NOT NULL,
   created_at TIMESTAMP NOT NULL,
   updated_at TIMESTAMP NOT NULL
 );

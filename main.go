@@ -63,9 +63,9 @@ func main() {
   v1Router.Get("/err",handlerErr)
   v1Router.Post("/users",apiCfg.handlerCreateUser)
   v1Router.Post("/visit",apiCfg.handlerCreateVisit)
-  v1Router.Get("/users", apiCfg.handlerGetUser)
-  v1Router.Get("/domain",apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
-  v1Router.Post("/domain", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
+  v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+  v1Router.Post("/domain",apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
+  v1Router.Post("/domains", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
   v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowsGet))
   

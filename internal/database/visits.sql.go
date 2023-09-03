@@ -13,38 +13,32 @@ import (
 )
 
 const createVisit = `-- name: CreateVisit :one
-INSERT INTO visits(id,createdat, country,ip,visitorstatus,domain,visitfrom)
-VALUES($1,$2,$3,$4,$5,$6,$7)
-RETURNING id, createdat, country, ip, visitorstatus, domain, visitfrom
+INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom)
+VALUES($1,$2,$3,$4,$5)
+RETURNING createdat, visitorstatus, visitduration, domain, visitfrom
 `
 
 type CreateVisitParams struct {
-	ID            string
 	Createdat     time.Time
-	Country       string
-	Ip            string
 	Visitorstatus string
+	Visitduration int32
 	Domain        uuid.UUID
 	Visitfrom     string
 }
 
 func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit, error) {
 	row := q.db.QueryRowContext(ctx, createVisit,
-		arg.ID,
 		arg.Createdat,
-		arg.Country,
-		arg.Ip,
 		arg.Visitorstatus,
+		arg.Visitduration,
 		arg.Domain,
 		arg.Visitfrom,
 	)
 	var i Visit
 	err := row.Scan(
-		&i.ID,
 		&i.Createdat,
-		&i.Country,
-		&i.Ip,
 		&i.Visitorstatus,
+		&i.Visitduration,
 		&i.Domain,
 		&i.Visitfrom,
 	)

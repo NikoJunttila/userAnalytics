@@ -30,6 +30,7 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
     Url: params.Url,
     TotalVisits: 0,
     TotalUnique: 0,
+    TotalTime: 0,
     CreatedAt: time.Now().UTC(),
     UpdatedAt: time.Now().UTC(),
   })
