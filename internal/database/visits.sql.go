@@ -44,3 +44,168 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 	)
 	return i, err
 }
+
+const getLimitedCount = `-- name: GetLimitedCount :many
+
+SELECT
+    (SELECT COUNT(*) FROM visits) AS domain_count,
+    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus='new') AS new_visitor_count,
+    (SELECT CEIL(AVG(visitduration)) FROM visits) AS avg_visit_duration,
+    visitfrom, COUNT(*) AS count
+FROM visits WHERE visits.domain=$1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY visitfrom
+`
+
+type GetLimitedCountRow struct {
+	DomainCount      int64
+	NewVisitorCount  int64
+	AvgVisitDuration float64
+	Visitfrom        string
+	Count            int64
+}
+
+func (q *Queries) GetLimitedCount(ctx context.Context, domain uuid.UUID) ([]GetLimitedCountRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLimitedCount, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLimitedCountRow
+	for rows.Next() {
+		var i GetLimitedCountRow
+		if err := rows.Scan(
+			&i.DomainCount,
+			&i.NewVisitorCount,
+			&i.AvgVisitDuration,
+			&i.Visitfrom,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getNinetyDays = `-- name: GetNinetyDays :many
+SELECT
+    (SELECT COUNT(*) FROM visits) AS domain_count,
+    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus='new') AS new_visitor_count,
+    (SELECT CEIL(AVG(visitduration)) FROM visits) AS avg_visit_duration,
+    visitfrom, COUNT(*) AS count
+FROM visits WHERE visits.domain=$1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY visitfrom
+`
+
+type GetNinetyDaysRow struct {
+	DomainCount      int64
+	NewVisitorCount  int64
+	AvgVisitDuration float64
+	Visitfrom        string
+	Count            int64
+}
+
+func (q *Queries) GetNinetyDays(ctx context.Context, domain uuid.UUID) ([]GetNinetyDaysRow, error) {
+	rows, err := q.db.QueryContext(ctx, getNinetyDays, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetNinetyDaysRow
+	for rows.Next() {
+		var i GetNinetyDaysRow
+		if err := rows.Scan(
+			&i.DomainCount,
+			&i.NewVisitorCount,
+			&i.AvgVisitDuration,
+			&i.Visitfrom,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSevenDays = `-- name: GetSevenDays :many
+SELECT
+    (SELECT COUNT(*) FROM visits) AS domain_count,
+    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus='new') AS new_visitor_count,
+    (SELECT CEIL(AVG(visitduration)) FROM visits) AS avg_visit_duration,
+    visitfrom, COUNT(*) AS count
+FROM visits WHERE visits.domain=$1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY visitfrom
+`
+
+type GetSevenDaysRow struct {
+	DomainCount      int64
+	NewVisitorCount  int64
+	AvgVisitDuration float64
+	Visitfrom        string
+	Count            int64
+}
+
+func (q *Queries) GetSevenDays(ctx context.Context, domain uuid.UUID) ([]GetSevenDaysRow, error) {
+	rows, err := q.db.QueryContext(ctx, getSevenDays, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSevenDaysRow
+	for rows.Next() {
+		var i GetSevenDaysRow
+		if err := rows.Scan(
+			&i.DomainCount,
+			&i.NewVisitorCount,
+			&i.AvgVisitDuration,
+			&i.Visitfrom,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTotalCount = `-- name: GetTotalCount :one
+
+SELECT
+    (SELECT COUNT(*) FROM visits) AS total_count,
+    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus = 'new') AS new_visitor_count,
+    (SELECT CEIL(AVG(visitduration)) FROM visits ) AS avg_visit_duration
+FROM visits WHERE visits.domain = $1
+GROUP BY total_count
+`
+
+type GetTotalCountRow struct {
+	TotalCount       int64
+	NewVisitorCount  int64
+	AvgVisitDuration float64
+}
+
+func (q *Queries) GetTotalCount(ctx context.Context, domain uuid.UUID) (GetTotalCountRow, error) {
+	row := q.db.QueryRowContext(ctx, getTotalCount, domain)
+	var i GetTotalCountRow
+	err := row.Scan(&i.TotalCount, &i.NewVisitorCount, &i.AvgVisitDuration)
+	return i, err
+}

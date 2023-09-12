@@ -20,6 +20,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
+  fmt.Println(params.Domain)
 	if err != nil {
 		fmt.Printf("error: %v \n", err)
 		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))
@@ -38,11 +39,92 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
 		}
-		 if err != nil {
-		     fmt.Printf("Database error: %v\n", err)
-		}
 	}()
 
 	// Respond to the HTTP request immediately, without waiting for the database operation.
 	respondWithJson(w, 200, nil)
+}
+func (apiCfg *apiConfig) handlerCountVisits(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+    DomainID uuid.UUID `json:"domain_id"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+
+  stats, err := apiCfg.DB.GetTotalCount(r.Context(), params.DomainID)
+  if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+    return 
+  }
+   err = apiCfg.DB.UpdateDomain(r.Context(), database.UpdateDomainParams{
+     ID: params.DomainID,
+     TotalVisits: int32(stats.TotalCount),
+     TotalUnique: int32(stats.NewVisitorCount),
+     TotalTime: int32(stats.AvgVisitDuration),
+   })
+   if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error updating DB")
+     return
+   }
+	respondWithJson(w, 200, stats)
+}
+func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+    DomainID uuid.UUID `json:"domain_id"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+  stats, err := apiCfg.DB.GetLimitedCount(r.Context(),params.DomainID) 
+  if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+    return 
+  }
+	respondWithJson(w, 200, stats)
+}
+//I CBA with this
+func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+    DomainID uuid.UUID `json:"domain_id"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+  stats, err := apiCfg.DB.GetSevenDays(r.Context(),params.DomainID) 
+  if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+    return 
+  }
+	respondWithJson(w, 200, stats)
+}
+func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+    DomainID uuid.UUID `json:"domain_id"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+  stats, err := apiCfg.DB.GetNinetyDays(r.Context(),params.DomainID) 
+  if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+    return 
+  }
+	respondWithJson(w, 200, stats)
 }

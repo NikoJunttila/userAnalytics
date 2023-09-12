@@ -115,3 +115,29 @@ func (q *Queries) GetDomains(ctx context.Context) ([]Domain, error) {
 	}
 	return items, nil
 }
+
+const updateDomain = `-- name: UpdateDomain :exec
+
+UPDATE domains
+  set total_visits = $2,
+  total_unique = $3,
+  total_time = $4
+WHERE id = $1
+`
+
+type UpdateDomainParams struct {
+	ID          uuid.UUID
+	TotalVisits int32
+	TotalUnique int32
+	TotalTime   int32
+}
+
+func (q *Queries) UpdateDomain(ctx context.Context, arg UpdateDomainParams) error {
+	_, err := q.db.ExecContext(ctx, updateDomain,
+		arg.ID,
+		arg.TotalVisits,
+		arg.TotalUnique,
+		arg.TotalTime,
+	)
+	return err
+}

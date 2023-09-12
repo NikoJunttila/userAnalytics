@@ -10,3 +10,11 @@ SELECT * FROM domains;
 -- name: GetDomain :one
 Select * FROM domains WHERE id = $1;
 --
+
+-- name: UpdateDomain :exec
+UPDATE domains
+  set total_visits = $2,
+  total_unique = $3,
+  total_time = $4
+WHERE id = $1;
+
