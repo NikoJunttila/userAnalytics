@@ -20,7 +20,6 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
-  fmt.Println(params.Domain)
 	if err != nil {
 		fmt.Printf("error: %v \n", err)
 		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))

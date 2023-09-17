@@ -79,7 +79,7 @@ func main() {
 
 	server := &http.Server{
 		Handler: r,
-		Addr:    ":" + portString,
+		Addr:    "0.0.0.0:" + portString,
 	}
 	err = server.ListenAndServe()
 	if err != nil {
