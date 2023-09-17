@@ -1,6 +1,6 @@
 module github.com/nikojunttila/userAnalytics
 
-go 1.21.0
+go 1.17
 
 require (
 	github.com/go-chi/chi v1.5.4
