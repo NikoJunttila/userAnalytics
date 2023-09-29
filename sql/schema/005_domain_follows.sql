@@ -4,6 +4,7 @@ CREATE TABLE domain_follows (
     created_at TIMESTAMP NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     domain_id UUID NOT NULL REFERENCES domains(id) ON DELETE CASCADE,
+    domain_name TEXT NOT NULL,
     UNIQUE (user_id, domain_id)
 );
 

@@ -22,6 +22,15 @@ type LoginUser struct {
   APIKey string `json:"api_key"`
   Email string `json:"email"`
 }
+type CurretUser struct {
+  Name string `json:"name"`
+  APIKey string `json:"api_key"`
+  Email string `json:"email"`
+}
+type DomainCreate struct {
+  Name string `json:"name"`
+  DomainId string `json:"domainID"`
+}
 func databaseUserToUser(dbUser database.User) User{
   return User{
     ID: dbUser.ID,
@@ -39,5 +48,18 @@ func databaseUserToLogin(dbUser database.User) LoginUser{
     Name: dbUser.Name,
     APIKey: dbUser.ApiKey,
     Email: dbUser.Email,
+  }
+}
+func databaseCurrentUser(dbUser database.User) CurretUser{
+  return CurretUser{
+    Name: dbUser.Name,
+    APIKey: dbUser.ApiKey,
+    Email: dbUser.Email,
+  }
+}
+func databaseCreateDomain(name string, domainID string) DomainCreate{
+  return DomainCreate{
+    Name: name,
+    DomainId: domainID,
   }
 }
