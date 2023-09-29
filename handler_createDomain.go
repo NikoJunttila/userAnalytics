@@ -42,6 +42,7 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
 		CreatedAt: time.Now().UTC(),
 		UserID:    user.ID,
 		DomainID:  domainUUID,
+    DomainName: params.Name,
 	})
 	if err != nil {
     respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error: %v", err))
