@@ -43,7 +43,7 @@ function analytics(domainID) {
       visitStartTime = null;
     }
     // Send the data to the server using an HTTP POST request
-    fetch('useranalytics-production.up.railway.app/v1/visit', {
+    fetch('https://useranalytics-production.up.railway.app/v1/visit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
