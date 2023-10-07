@@ -63,10 +63,10 @@ func main() {
   v1Router.Get("/err",handlerErr)
   v1Router.Post("/createuser",apiCfg.handlerCreateUser)
   v1Router.Post("/visit",apiCfg.handlerCreateVisit)
-  v1Router.Post("/visit/stats", apiCfg.handlerCountVisits)  
-  v1Router.Post("/visit/seven", apiCfg.handlerSevenVisits)
-  v1Router.Post("/visit/thirty", apiCfg.handlerLimitedVisits)
-  v1Router.Post("/visit/ninety", apiCfg.handlerNinetyVisits)
+  v1Router.Post("/visits/stats", apiCfg.handlerCountVisits)  
+  v1Router.Post("/visits/7", apiCfg.handlerSevenVisits)
+  v1Router.Post("/visits/30", apiCfg.handlerLimitedVisits)
+  v1Router.Post("/visits/90", apiCfg.handlerNinetyVisits)
   v1Router.Post("/login", apiCfg.handlerLogin)
   v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
   v1Router.Post("/domain",apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
@@ -85,5 +85,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
