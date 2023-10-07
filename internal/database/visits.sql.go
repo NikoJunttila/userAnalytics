@@ -48,11 +48,12 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 const getLimitedCount = `-- name: GetLimitedCount :many
 
 SELECT
-    (SELECT COUNT(*) FROM visits) AS domain_count,
-    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus='new') AS new_visitor_count,
-    (SELECT CEIL(AVG(visitduration)) FROM visits) AS avg_visit_duration,
+    COUNT(*) AS domain_count,
+    COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
+    CEIL(AVG(visitduration)) AS avg_visit_duration,
     visitfrom, COUNT(*) AS count
-FROM visits WHERE visits.domain=$1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
 GROUP BY visitfrom
 `
 
@@ -95,11 +96,12 @@ func (q *Queries) GetLimitedCount(ctx context.Context, domain uuid.UUID) ([]GetL
 
 const getNinetyDays = `-- name: GetNinetyDays :many
 SELECT
-    (SELECT COUNT(*) FROM visits) AS domain_count,
-    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus='new') AS new_visitor_count,
-    (SELECT CEIL(AVG(visitduration)) FROM visits) AS avg_visit_duration,
+    COUNT(*) AS domain_count,
+    COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
+    CEIL(AVG(visitduration)) AS avg_visit_duration,
     visitfrom, COUNT(*) AS count
-FROM visits WHERE visits.domain=$1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
 GROUP BY visitfrom
 `
 
@@ -142,11 +144,12 @@ func (q *Queries) GetNinetyDays(ctx context.Context, domain uuid.UUID) ([]GetNin
 
 const getSevenDays = `-- name: GetSevenDays :many
 SELECT
-    (SELECT COUNT(*) FROM visits) AS domain_count,
-    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus='new') AS new_visitor_count,
-    (SELECT CEIL(AVG(visitduration)) FROM visits) AS avg_visit_duration,
+    COUNT(*) AS domain_count,
+    COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
+    CEIL(AVG(visitduration)) AS avg_visit_duration,
     visitfrom, COUNT(*) AS count
-FROM visits WHERE visits.domain=$1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
 GROUP BY visitfrom
 `
 
