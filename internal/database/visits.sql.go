@@ -193,11 +193,11 @@ func (q *Queries) GetSevenDays(ctx context.Context, domain uuid.UUID) ([]GetSeve
 const getTotalCount = `-- name: GetTotalCount :one
 
 SELECT
-    (SELECT COUNT(*) FROM visits) AS total_count,
-    (SELECT COUNT(visitorstatus) FROM visits WHERE visitorstatus = 'new') AS new_visitor_count,
-    (SELECT CEIL(AVG(visitduration)) FROM visits ) AS avg_visit_duration
-FROM visits WHERE visits.domain = $1
-GROUP BY total_count
+    COUNT(*) AS total_count,
+    COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
+    CEIL(AVG(visitduration)) AS avg_visit_duration
+FROM visits
+WHERE domain = $1
 `
 
 type GetTotalCountRow struct {
