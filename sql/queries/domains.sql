@@ -13,8 +13,7 @@ Select * FROM domains WHERE id = $1;
 
 -- name: UpdateDomain :exec
 UPDATE domains
-  set total_visits = $2,
-  total_unique = $3,
-  total_time = $4
+  set total_visits = total_visits + $2,
+  total_unique =  total_unique + $3
 WHERE id = $1;
 
