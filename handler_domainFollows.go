@@ -57,21 +57,6 @@ func (apiCfg *apiConfig) handlerGetDomain(w http.ResponseWriter, r *http.Request
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
-	stats, err := apiCfg.DB.GetTotalCount(r.Context(), params.DomainID)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "DB error")
-		return
-	}
-	err = apiCfg.DB.UpdateDomain(r.Context(), database.UpdateDomainParams{
-		ID:          params.DomainID,
-		TotalVisits: int32(stats.TotalCount),
-		TotalUnique: int32(stats.NewVisitorCount),
-		TotalTime:   int32(stats.AvgVisitDuration),
-	})
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "DB error")
-		return
-	}
   domain, err := apiCfg.DB.GetDomain(r.Context(), params.DomainID)
   if err != nil { 
     respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting domain: %v",err))
