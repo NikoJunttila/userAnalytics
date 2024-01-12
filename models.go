@@ -31,6 +31,7 @@ type DomainCreate struct {
   Name string `json:"name"`
   DomainId string `json:"domainID"`
 }
+
 func databaseUserToUser(dbUser database.User) User{
   return User{
     ID: dbUser.ID,
@@ -63,3 +64,4 @@ func databaseCreateDomain(name string, domainID string) DomainCreate{
     DomainId: domainID,
   }
 }
+

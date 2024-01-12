@@ -54,6 +54,9 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request){
     respondWithError(w,400,fmt.Sprintf("error parsing JSON: %v", err))
     return
   }
+
+  // fmt.Println(params.Password)
+  
   user,err := apiCfg.DB.GetUserByEmail(r.Context(),params.Email)
   if err != nil {
     respondWithError(w,400,fmt.Sprintf("error with DB: %v", err))
