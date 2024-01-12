@@ -116,6 +116,51 @@ func (q *Queries) GetDomains(ctx context.Context) ([]Domain, error) {
 	return items, nil
 }
 
+const getMonthStats = `-- name: GetMonthStats :one
+
+SELECT
+  COUNT(*) AS total_count,
+  COUNT(CASE WHEN visitorstatus='new' THEN 1 END) AS new_visitor_count
+FROM visits
+WHERE domain = $1
+  AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+`
+
+type GetMonthStatsRow struct {
+	TotalCount      int64
+	NewVisitorCount int64
+}
+
+func (q *Queries) GetMonthStats(ctx context.Context, domain uuid.UUID) (GetMonthStatsRow, error) {
+	row := q.db.QueryRowContext(ctx, getMonthStats, domain)
+	var i GetMonthStatsRow
+	err := row.Scan(&i.TotalCount, &i.NewVisitorCount)
+	return i, err
+}
+
+const getPrevMonthStats = `-- name: GetPrevMonthStats :one
+
+SELECT
+  COUNT(*) AS total_count,
+  COUNT(CASE WHEN visitorstatus='new' THEN 1 END) AS new_visitor_count
+FROM visits 
+WHERE domain = $1
+  AND createdat >= CURRENT_DATE - INTERVAL '60 days'
+  AND createdat < CURRENT_DATE - INTERVAL '30 days'
+`
+
+type GetPrevMonthStatsRow struct {
+	TotalCount      int64
+	NewVisitorCount int64
+}
+
+func (q *Queries) GetPrevMonthStats(ctx context.Context, domain uuid.UUID) (GetPrevMonthStatsRow, error) {
+	row := q.db.QueryRowContext(ctx, getPrevMonthStats, domain)
+	var i GetPrevMonthStatsRow
+	err := row.Scan(&i.TotalCount, &i.NewVisitorCount)
+	return i, err
+}
+
 const updateDomain = `-- name: UpdateDomain :exec
 
 UPDATE domains

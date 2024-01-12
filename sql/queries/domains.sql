@@ -16,4 +16,22 @@ UPDATE domains
   set total_visits = total_visits + $2,
   total_unique =  total_unique + $3
 WHERE id = $1;
+--
 
+-- name: GetPrevMonthStats :one
+SELECT
+  COUNT(*) AS total_count,
+  COUNT(CASE WHEN visitorstatus='new' THEN 1 END) AS new_visitor_count
+FROM visits 
+WHERE domain = $1
+  AND createdat >= CURRENT_DATE - INTERVAL '60 days'
+  AND createdat < CURRENT_DATE - INTERVAL '30 days';
+--
+
+-- name: GetMonthStats :one
+SELECT
+  COUNT(*) AS total_count,
+  COUNT(CASE WHEN visitorstatus='new' THEN 1 END) AS new_visitor_count
+FROM visits
+WHERE domain = $1
+  AND createdat >= CURRENT_DATE - INTERVAL '30 days';
