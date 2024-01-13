@@ -13,7 +13,7 @@ import (
 
 func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request){
   type parameters struct{
-    Name string `json:"name"`
+    //Name string `json:"name"`
     Password string `json:"password"`
     Email string `json:"email"`
   }
@@ -29,15 +29,24 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
     ID: uuid.New(),
     CreatedAt: time.Now().UTC(),
     UpdatedAt: time.Now().UTC(),
-    Name: params.Name,
+    Name: "placeholder",
     Email: params.Email,
     Passhash: hashPassword,
   })
-  if err != nil {
-    respondWithError(w,400,fmt.Sprintf("error with DB: %v", err))
-  }
+
+if err != nil {
+    if err.Error() == "pq: duplicate key value violates unique constraint \"users_email_key\"" {
+        respondWithError(w, 400, "Email already taken")
+        return
+    }
+    // Handle other database errors
+    errMsg := fmt.Sprintf("error with DB: %v", err)
+    fmt.Println(errMsg)
+    respondWithError(w, 400, errMsg)
+    return
+}
   
-  respondWithJson(w, 200 , databaseUserToUser(user))
+respondWithJson(w, 200 , databaseUserToUser(user))
 } 
 func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User){
   respondWithJson(w, 200, databaseCurrentUser(user))
@@ -54,12 +63,10 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request){
     respondWithError(w,400,fmt.Sprintf("error parsing JSON: %v", err))
     return
   }
-
-  // fmt.Println(params.Password)
-  
   user,err := apiCfg.DB.GetUserByEmail(r.Context(),params.Email)
   if err != nil {
-    respondWithError(w,400,fmt.Sprintf("error with DB: %v", err))
+    respondWithError(w,400,fmt.Sprintf("no users found with this email/password combo"))
+    return
   }
   comparedPass := comparePasswords(user.Passhash, []byte(params.Password))
   if !comparedPass{

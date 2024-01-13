@@ -36,6 +36,7 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
   })
   if err != nil {
     respondWithError(w,400,fmt.Sprintf("error parsing JSON: %v", err))
+    return
   }
   _, err = apiCfg.DB.CreateDomainFollow(r.Context(), database.CreateDomainFollowParams{
 		ID:        uuid.New(),
@@ -52,7 +53,6 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
   respondWithJson(w, 201 , domain)
 }
 func percentageDiff(first int64, second int64)float64{
-  //var diff float64
   diff := (float64(first) - float64(second)) / float64(second) * 100.0
   return diff
 }
@@ -80,8 +80,8 @@ func (apiCfg *apiConfig) handlerCompare(w http.ResponseWriter, r *http.Request) 
 	stats2, err := apiCfg.DB.GetPrevMonthStats(r.Context(), params.DomainID)
 	if err != nil || stats2.TotalCount == 0 {
   var infinite compare
-  infinite.Total = 100.0
-  infinite.Unique = 100.0
+  infinite.Total = 0.0
+  infinite.Unique = 0.0
   respondWithJson(w, 200, infinite)
   return
   }

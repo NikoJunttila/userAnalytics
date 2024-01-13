@@ -22,7 +22,7 @@ func (cfg *apiConfig) handlerDomainFollowsGet(w http.ResponseWriter, r *http.Req
 func (cfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
     DomainID uuid.UUID `json:"domain_id"`
-    DomainName string `json:"domain_name"`
+    //DomainName string `json:"domain_name"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -31,15 +31,16 @@ func (cfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.R
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
-
+  domain, err := cfg.DB.GetDomain(r.Context(), params.DomainID)
 	domainFollow, err := cfg.DB.CreateDomainFollow(r.Context(), database.CreateDomainFollowParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UserID:    user.ID,
 		DomainID:    params.DomainID,
-    DomainName: params.DomainName, 
+    DomainName: domain.Name, 
 	})
 	if err != nil {
+    fmt.Println(err)
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create feed follow")
 		return
 	}
