@@ -16,6 +16,7 @@ func (cfg *apiConfig) handlerDomainFollowsGet(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get feeds")
 		return
 	}
+  w.Header().Set("Cache-Control", "public, max-age=3600")
 	respondWithJson(w, 200, domainFollows)
 }
 
@@ -63,5 +64,6 @@ func (apiCfg *apiConfig) handlerGetDomain(w http.ResponseWriter, r *http.Request
     respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting domain: %v",err))
     return
   }
+  w.Header().Set("Cache-Control", "public, max-age=3600")
 	respondWithJson(w, 200, domain)
 }

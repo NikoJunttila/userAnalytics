@@ -88,5 +88,6 @@ func (apiCfg *apiConfig) handlerCompare(w http.ResponseWriter, r *http.Request) 
   var stats compare;
   stats.Total = percentageDiff(stats1.TotalCount, stats2.TotalCount)
   stats.Unique = percentageDiff(stats1.NewVisitorCount, stats2.NewVisitorCount)
+  w.Header().Set("Cache-Control", "public, max-age=3600")
   respondWithJson(w, 200, stats)
 }

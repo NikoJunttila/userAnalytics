@@ -74,6 +74,8 @@ func main() {
   v1Router.Post("/domains", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
   v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowsGet))
+  v1Router.Get("/example", apiCfg.handlerGetFreeDomain)
+  v1Router.Get("/example2", apiCfg.handlerFreeCompare)
   r.Mount("/v1", v1Router)
 
 	fmt.Println("listening on port:" + portString)
