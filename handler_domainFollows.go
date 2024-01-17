@@ -48,22 +48,4 @@ func (cfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.R
 
 	respondWithJson(w, 201, domainFollow)
 }
-func (apiCfg *apiConfig) handlerGetDomain(w http.ResponseWriter, r *http.Request, user database.User) {
-		type parameters struct {
-    DomainID uuid.UUID `json:"domain_id"`
-	}
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
-		return
-	}
-  domain, err := apiCfg.DB.GetDomain(r.Context(), params.DomainID)
-  if err != nil { 
-    respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting domain: %v",err))
-    return
-  }
-  w.Header().Set("Cache-Control", "public, max-age=3600")
-	respondWithJson(w, 200, domain)
-}
+

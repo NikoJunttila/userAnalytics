@@ -63,8 +63,7 @@ func main() {
   v1Router.Get("/err",handlerErr)
   v1Router.Post("/createuser",apiCfg.handlerCreateUser)
   v1Router.Post("/visit",apiCfg.handlerCreateVisit)
-  // v1Router.Post("/visits/stats", apiCfg.handlerCountVisits)  
-  v1Router.Post("/compare", apiCfg.handlerCompare)
+  // v1Router.Post("/compare", apiCfg.handlerCompare)
   v1Router.Post("/visits/7", apiCfg.handlerSevenVisits)
   v1Router.Post("/visits/30", apiCfg.handlerLimitedVisits)
   v1Router.Post("/visits/90", apiCfg.handlerNinetyVisits)
@@ -75,7 +74,6 @@ func main() {
   v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowsGet))
   v1Router.Get("/example", apiCfg.handlerGetFreeDomain)
-  v1Router.Get("/example2", apiCfg.handlerFreeCompare)
   r.Mount("/v1", v1Router)
 
 	fmt.Println("listening on port:" + portString)

@@ -52,19 +52,19 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
 
   respondWithJson(w, 201 , domain)
 }
-func percentageDiff(first int64, second int64)float64{
-  diff := (float64(first) - float64(second)) / float64(second) * 100.0
-  return diff
-}
-func (apiCfg *apiConfig) handlerCompare(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerGetDomain(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
-		DomainID uuid.UUID `json:"domain_id"`
+    DomainID uuid.UUID `json:"domain_id"`
 	}
   type compare struct {
   Total float64 `json:"total"`
   Unique float64 `json:"unique"`
   }
-
+  type extendDomain struct {
+  database.Domain
+  Total float64 `json:"total"`
+  Unique float64 `json:"unique"`
+  }
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -72,22 +72,36 @@ func (apiCfg *apiConfig) handlerCompare(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
-	stats1, err := apiCfg.DB.GetMonthStats(r.Context(), params.DomainID)
+  domainID := params.DomainID
+  domain, err := apiCfg.DB.GetDomain(r.Context(), domainID)
+  if err != nil { 
+    respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting domain: %v",err))
+    return
+  }
+  stats1, err := apiCfg.DB.GetMonthStats(r.Context(), domainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
 	}
-	stats2, err := apiCfg.DB.GetPrevMonthStats(r.Context(), params.DomainID)
+	stats2, err := apiCfg.DB.GetPrevMonthStats(r.Context(), domainID)
+  w.Header().Set("Cache-Control", "public, max-age=3600")
 	if err != nil || stats2.TotalCount == 0 {
-  var infinite compare
+  var infinite extendDomain
+  infinite.Domain = domain
   infinite.Total = 0.0
   infinite.Unique = 0.0
   respondWithJson(w, 200, infinite)
   return
   }
-  var stats compare;
+  var stats extendDomain;
   stats.Total = percentageDiff(stats1.TotalCount, stats2.TotalCount)
   stats.Unique = percentageDiff(stats1.NewVisitorCount, stats2.NewVisitorCount)
-  w.Header().Set("Cache-Control", "public, max-age=3600")
-  respondWithJson(w, 200, stats)
+  stats.Domain = domain
+	respondWithJson(w, 200, stats)
+
 }
+func percentageDiff(first int64, second int64)float64{
+  diff := (float64(first) - float64(second)) / float64(second) * 100.0
+  return diff
+}
+
