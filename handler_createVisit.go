@@ -52,8 +52,9 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		  TotalVisits: 1,
 		  TotalUnique: uniqueVisit,
 	})
+  fmt.Println("new  visit")
 	// Respond to the HTTP request immediately, without waiting for the database operation.
-	respondWithJson(w, 200, nil)
+	respondWithJson(w, 200, "success")
 }
 // func (apiCfg *apiConfig) handlerCountVisits(w http.ResponseWriter, r *http.Request) {
 // 	type parameters struct {
