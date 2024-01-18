@@ -53,6 +53,9 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		  TotalUnique: uniqueVisit,
 	})
   fmt.Println("new  visit")
+  w.Header().Set("Access-Control-Allow-Origin", "*")
+  w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+  w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	// Respond to the HTTP request immediately, without waiting for the database operation.
 	respondWithJson(w, 200, "success")
 }

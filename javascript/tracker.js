@@ -38,13 +38,17 @@ function analytics(domainID) {
     }
     const serverURL = "https://useranalytics-2-dev-cqjz.2.us-1.fl0.io/v1/visit" 
 /*     const serverURL = "http://localhost:8000/v1/visit" */
-    navigator.sendBeacon(serverURL,JSON.stringify({
+    const headers = {
+    type: 'application/json'
+  }
+  const body = {
       status:isNewUser(),
       visitDuration:visitDuration,
       domain:domainID,
       visitFrom: document.referrer || 'Direct visit'
-    })
-  )
+  }
+  const blob = new Blob([JSON.stringify(body)], headers);
+  navigator.sendBeacon(serverURL,blob)
   setVisitTimestamp();
 }
 window.addEventListener('load', startVisitTracking);
