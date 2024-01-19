@@ -36,19 +36,15 @@ function analytics(domainID) {
       const floatValue = (visitEndTime - visitStartTime) / 1000;
       visitDuration = ~~floatValue;
     }
-    const serverURL = "https://useranalytics-2-dev-cqjz.2.us-1.fl0.io/v1/visit" 
-/*     const serverURL = "http://localhost:8000/v1/visit" */
-    const headers = {
-    type: 'application/json'
-  }
-  const body = {
+     const serverURL = "https://useranalytics-2-dev-cqjz.2.us-1.fl0.io/v1/visit" 
+     // const serverURL = "http://localhost:8000/v1/visit"
+    navigator.sendBeacon(serverURL,JSON.stringify({
       status:isNewUser(),
       visitDuration:visitDuration,
       domain:domainID,
       visitFrom: document.referrer || 'Direct visit'
-  }
-  const blob = new Blob([JSON.stringify(body)], headers);
-  navigator.sendBeacon(serverURL,blob)
+    })
+  )
   setVisitTimestamp();
 }
 window.addEventListener('load', startVisitTracking);
@@ -57,4 +53,3 @@ document.addEventListener('visibilitychange', function logData() {
     analytics(dID)
   }
 });
-

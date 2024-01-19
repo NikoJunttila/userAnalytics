@@ -66,7 +66,7 @@ func main() {
   v1Router.Post("/visits/7", apiCfg.handlerSevenVisits)
   v1Router.Post("/visits/30", apiCfg.handlerLimitedVisits)
   v1Router.Post("/visits/90", apiCfg.handlerNinetyVisits)
-  v1Router.Post("/login", apiCfg.handlerLogin)
+  v1Router.Post("/login", apiCfg.handlerLogin)    
   v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
   v1Router.Post("/domain",apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
   v1Router.Post("/domains", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
