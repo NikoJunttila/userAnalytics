@@ -12,7 +12,7 @@ import (
 )
 
 func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Credentials", "true") 
+	// w.Header().Set("Access-Control-Allow-Credentials", "true") 
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
