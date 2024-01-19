@@ -12,7 +12,6 @@ import (
 )
 
 func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Access-Control-Allow-Credentials", "true") 
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
@@ -44,20 +43,18 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
 		}
-	}()
-
   var uniqueVisit int32 = 0
   if params.VisitStat == "new"{
   uniqueVisit = 1}
-	err = apiCfg.DB.UpdateDomain(r.Context(), database.UpdateDomainParams{
+	err = apiCfg.DB.UpdateDomain(dbCtx, database.UpdateDomainParams{
 		  ID:          params.Domain,
 		  TotalVisits: 1,
 		  TotalUnique: uniqueVisit,
 	})
   if err != nil {
 		fmt.Printf("error: %v \n", err)
-    return 
   }
+	}()
   fmt.Println("new  visit")
 	respondWithJson(w, 200, "success")
 }
