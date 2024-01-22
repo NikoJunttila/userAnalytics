@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
@@ -17,9 +18,7 @@ func (apiCfg *apiConfig) handlerGetFreeDomain(w http.ResponseWriter, r *http.Req
   Total float64 `json:"total"`
   Unique float64 `json:"unique"`
   }
-  //test below
-  // domainIDString := "9c698b28-4a0c-49e2-815d-0ab446088352"
-  domainIDString := "93417e06-8dc7-40ed-a9a5-d65a72fc5098"
+  domainIDString := chi.URLParam(r, "id")
   domainID, err := uuid.Parse(domainIDString)
 	if err != nil {
 		fmt.Println("Error parsing UUID:", err)
