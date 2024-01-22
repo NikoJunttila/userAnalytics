@@ -36,7 +36,7 @@ function analytics(domainID) {
       const floatValue = (visitEndTime - visitStartTime) / 1000;
       visitDuration = ~~floatValue;
     }
-     const serverURL = "https://useranalytics-2-dev-cqjz.2.us-1.fl0.io/v1/visit" 
+     const serverURL = "https://analytics-derp.koyeb.app/v1/visit" 
      // const serverURL = "http://localhost:8000/v1/visit"
     navigator.sendBeacon(serverURL,JSON.stringify({
       status:isNewUser(),
