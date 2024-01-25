@@ -30,6 +30,14 @@ type DomainFollow struct {
 	DomainName string
 }
 
+type PasswordReset struct {
+	ID         uuid.UUID
+	Expiration time.Time
+	Email      string
+	Valid      bool
+	Token      string
+}
+
 type User struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
