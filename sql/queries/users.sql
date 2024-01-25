@@ -25,3 +25,8 @@ RETURNING *;
 -- name: ResetPassword :one
 SELECT * FROM password_resets WHERE token = $1;
 --
+-- name: ResetInvalid :exec
+UPDATE password_resets
+SET valid=false
+WHERE id=$1;
+--

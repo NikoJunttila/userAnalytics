@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/go-chi/chi"
+	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
@@ -61,21 +63,25 @@ func (apiCfg *apiConfig) handlerForgotPass(w http.ResponseWriter, r *http.Reques
 	// Generate a unique token
 	token, err := generateToken()
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    respondWithError(w,400,fmt.Sprintf("error: %v", err))
 		return
 	}
-
 	// Set expiration time (e.g., 1 hour from now)
-	// expirationTime := time.Now().Add(time.Hour)
+	expirationTime := time.Now().Add(time.Hour)
 
-	// Save the password reset information to new postGres table
-	// resetInfo := PasswordReset{
-	// 	Email:          recipient,
-	// 	ResetToken:     token,
-	// 	ExpirationTime: expirationTime,
-	// }
-  
-  resetURL := fmt.Sprintf("http://localhost:800/v1/reset-password?token=%s", token)
+  _,err = apiCfg.DB.CreatePasswordReset(r.Context(),database.CreatePasswordResetParams{
+  Token: token,
+  Email: recipient,
+  ID: uuid.New(),
+  Valid: true,
+  Expiration: expirationTime,
+  })
+  if err != nil {
+    respondWithError(w,400,fmt.Sprintf("Error: %v", err))
+    fmt.Println(err)
+    return
+  }
+  resetURL := fmt.Sprintf("http://localhost:5173/reset-password?token=%s", token)
 
   auth := smtp.PlainAuth("", "nikosamulijunttila@gmail.com", emailSecret, "smtp.gmail.com")
 	// Connect to the server, authenticate, set the sender and recipient,
@@ -93,10 +99,47 @@ func (apiCfg *apiConfig) handlerForgotPass(w http.ResponseWriter, r *http.Reques
 	}
  respondWithJson(w, 200, fmt.Sprint("Sent password reset link to your email.")) 
 }
-type PasswordReset struct {
-	Email           string
-	ResetToken      string
-	ExpirationTime  time.Time
+
+func (apiCfg *apiConfig) HandlerInitPassReset(w http.ResponseWriter, r *http.Request) {
+  type parameters struct{
+    NewPass string `json:"newPass"`
+  }
+  decoder := json.NewDecoder(r.Body)
+  params :=  parameters{}
+  err := decoder.Decode(&params)
+  if err != nil {
+    respondWithError(w,400,fmt.Sprintf("error parsing JSON: %v", err))
+    return
+  }
+  token := chi.URLParam(r, "token")
+	if token == "" {
+    respondWithError(w,400,fmt.Sprint("Error getting reset token:"))
+		return
+	}
+	// Check if the token is valid and not expired
+	resetInfo, err := apiCfg.DB.ResetPassword(r.Context(), token)
+	if err != nil || time.Now().After(resetInfo.Expiration) {
+    respondWithError(w,400,fmt.Sprintf("Invalid token or expired: %v", err))
+		return
+	}
+  user, err := apiCfg.DB.GetUserByEmail(r.Context(), resetInfo.Email)
+  if err != nil {
+    respondWithError(w,400,fmt.Sprintf("error: %v", err))
+    return
+  }
+	// Reset password logic goes here...
+  hashPassword := hashAndSalt([]byte(params.NewPass))
+  err = apiCfg.DB.UpdatePassword(r.Context(), database.UpdatePasswordParams{
+ Passhash: hashPassword,
+ ID: user.ID,
+  })
+  if err != nil {
+    respondWithError(w,400,fmt.Sprintf("error updating password: %v", err))
+    return 
+  }
+	// Invalidate used password reset token
+
+ respondWithJson(w, 201, fmt.Sprint("Password reset")) 
 }
 func generateToken() (string, error) {
 	bytes := make([]byte, 16)

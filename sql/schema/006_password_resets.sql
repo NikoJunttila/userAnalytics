@@ -5,7 +5,7 @@ CREATE TABLE password_resets (
   expiration TIMESTAMP NOT NULL,
   email TEXT NOT NULL,
   valid BOOL NOT NULL,
-  token VARCHAR(128) NOT NULL
+  token VARCHAR(128) NOT NULL UNIQUE
 );
 
 -- +goose Down
