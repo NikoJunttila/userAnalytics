@@ -9,7 +9,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
@@ -102,7 +101,8 @@ func (apiCfg *apiConfig) handlerForgotPass(w http.ResponseWriter, r *http.Reques
 
 func (apiCfg *apiConfig) HandlerInitPassReset(w http.ResponseWriter, r *http.Request) {
   type parameters struct{
-    NewPass string `json:"newPass"`
+    NewPass string `json:"password"`
+    Token string `json:"token"`
   }
   decoder := json.NewDecoder(r.Body)
   params :=  parameters{}
@@ -111,17 +111,22 @@ func (apiCfg *apiConfig) HandlerInitPassReset(w http.ResponseWriter, r *http.Req
     respondWithError(w,400,fmt.Sprintf("error parsing JSON: %v", err))
     return
   }
-  token := chi.URLParam(r, "token")
+  token := params.Token
 	if token == "" {
     respondWithError(w,400,fmt.Sprint("Error getting reset token:"))
 		return
 	}
 	// Check if the token is valid and not expired
 	resetInfo, err := apiCfg.DB.ResetPassword(r.Context(), token)
-	if err != nil || time.Now().After(resetInfo.Expiration) {
-    respondWithError(w,400,fmt.Sprintf("Invalid token or expired: %v", err))
+	if err != nil{
+    respondWithError(w,400,fmt.Sprintf("Error: %v", err))
 		return
 	}
+
+  if time.Now().After(resetInfo.Expiration) || resetInfo.Valid == false {
+    respondWithError(w,400,fmt.Sprint("Token expired or invalid try again with new token"))
+    return 
+  }
   user, err := apiCfg.DB.GetUserByEmail(r.Context(), resetInfo.Email)
   if err != nil {
     respondWithError(w,400,fmt.Sprintf("error: %v", err))
@@ -138,8 +143,11 @@ func (apiCfg *apiConfig) HandlerInitPassReset(w http.ResponseWriter, r *http.Req
     return 
   }
 	// Invalidate used password reset token
-
- respondWithJson(w, 201, fmt.Sprint("Password reset")) 
+ err = apiCfg.DB.ResetInvalid(r.Context(), resetInfo.ID)
+ if err != nil {
+   fmt.Println("error invalidating reset")
+ }
+ respondWithJson(w, 201, databaseCurrentUser(user)) 
 }
 func generateToken() (string, error) {
 	bytes := make([]byte, 16)

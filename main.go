@@ -80,7 +80,7 @@ func main() {
   v1Router.Post("/forgotPass", func(w http.ResponseWriter, r *http.Request) {
     apiCfg.handlerForgotPass(w, r, emailCode)
   })
-  v1Router.Post("/tokenCheck/{token}",apiCfg.HandlerInitPassReset)
+  v1Router.Post("/resetPass",apiCfg.HandlerInitPassReset)
   r.Mount("/v1", v1Router)
 
 	fmt.Println("listening on port:" + portString)
