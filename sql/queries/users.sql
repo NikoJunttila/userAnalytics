@@ -17,3 +17,11 @@ UPDATE users
 SET passhash = $1
 WHERE id = $2;
 --
+-- name: CreatePasswordReset :one
+INSERT INTO password_resets(id,expiration,email,valid,token)
+VALUES($1,$2,$3,$4,$5)
+RETURNING *;
+--
+-- name: ResetPassword :one
+SELECT * FROM password_resets WHERE token = $1;
+--

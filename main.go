@@ -37,10 +37,13 @@ func main() {
   if err != nil {
     log.Fatal("cant connect to database",err)
   }
-
   apiCfg := apiConfig{
     DB: database.New(connection),
   }
+	emailCode := os.Getenv("emailCode")
+	if emailCode == "" {
+		log.Fatal("emailCode is not found")
+	}
 
 	r.Use(cors.Handler(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
@@ -73,6 +76,10 @@ func main() {
   v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowsGet))
   v1Router.Get("/example/{id}", apiCfg.handlerGetFreeDomain)
+  v1Router.Post("/passChange",apiCfg.middlewareAuth(apiCfg.handlerChangePass))
+  v1Router.Post("/forgotPass", func(w http.ResponseWriter, r *http.Request) {
+    apiCfg.handlerForgotPass(w, r, emailCode)
+  })
   r.Mount("/v1", v1Router)
 
 	fmt.Println("listening on port:" + portString)
