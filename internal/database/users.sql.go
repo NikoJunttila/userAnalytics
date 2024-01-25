@@ -123,6 +123,17 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const resetInvalid = `-- name: ResetInvalid :exec
+UPDATE password_resets
+SET valid=false
+WHERE id=$1
+`
+
+func (q *Queries) ResetInvalid(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, resetInvalid, id)
+	return err
+}
+
 const resetPassword = `-- name: ResetPassword :one
 SELECT id, expiration, email, valid, token FROM password_resets WHERE token = $1
 `
