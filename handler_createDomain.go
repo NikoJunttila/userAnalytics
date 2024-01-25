@@ -84,7 +84,7 @@ func (apiCfg *apiConfig) handlerGetDomain(w http.ResponseWriter, r *http.Request
 		return
 	}
 	stats2, err := apiCfg.DB.GetPrevMonthStats(r.Context(), domainID)
-  w.Header().Set("Cache-Control", "public, max-age=3600")
+  w.Header().Set("Cache-Control", "public, max-age=100")
 	if err != nil || stats2.TotalCount == 0 {
   var infinite extendDomain
   infinite.Domain = domain

@@ -11,3 +11,9 @@ SELECT * FROM users WHERE api_key = $1;
 
 -- name: GetUserByEmail :one
 SELECT * FROM users WHERE email = $1;
+
+-- name: UpdatePassword :exec
+UPDATE users
+SET passhash = $1
+WHERE id = $2;
+--

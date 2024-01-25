@@ -16,7 +16,7 @@ func (cfg *apiConfig) handlerDomainFollowsGet(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get feeds")
 		return
 	}
-  w.Header().Set("Cache-Control", "public, max-age=3600")
+  w.Header().Set("Cache-Control", "public, max-age=100")
 	respondWithJson(w, 200, domainFollows)
 }
 
