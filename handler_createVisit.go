@@ -42,6 +42,9 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 			Visitduration: params.VisitDuration,
 			Domain:        params.Domain,
 			Visitfrom:     params.VisitFrom,
+      Device:        params.Device,
+      Os:            params.OS,
+      Browser:       params.Browser,
 		})
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
