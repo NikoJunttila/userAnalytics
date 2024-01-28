@@ -5,7 +5,10 @@ CREATE TABLE visits (
   visitorStatus TEXT NOT NULL,
   visitDuration INT NOT NULL,
   domain UUID NOT NULL REFERENCES domains(id) ON DELETE CASCADE,
-  visitFrom TEXT NOT NULL
+  visitFrom TEXT NOT NULL,
+  browser TEXT NOT NULL,
+  device TEXT NOT NULL,
+  os TEXT NOT NULL
 );
 
 -- +goose Down

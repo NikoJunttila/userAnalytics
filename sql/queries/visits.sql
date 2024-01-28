@@ -1,9 +1,8 @@
 -- name: CreateVisit :one
-INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom)
-VALUES($1,$2,$3,$4,$5)
+INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8)
 RETURNING *;
 --
-
 -- name: GetTotalCount :one
 SELECT
     COUNT(*) AS total_count,

@@ -54,4 +54,7 @@ type Visit struct {
 	Visitduration int32
 	Domain        uuid.UUID
 	Visitfrom     string
+	Browser       string
+	Device        string
+	Os            string
 }
