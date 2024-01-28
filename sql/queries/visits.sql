@@ -42,3 +42,19 @@ SELECT
 FROM visits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
 GROUP BY visitfrom;
+--
+-- name: GetOsCount :many
+SELECT
+    COUNT(*) AS count,
+    os AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL $2
+GROUP BY os;
+--
+-- name: GetOsCount30 :many
+SELECT
+    COUNT(*) AS count,
+    os AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY os;

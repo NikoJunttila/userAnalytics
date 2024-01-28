@@ -26,6 +26,51 @@ function hasVisitedWithinLast12Hours() {
   }
   return false; 
 }
+function getBrowserName() {
+    var userAgent = navigator.userAgent;
+    if (userAgent.indexOf('Chrome') !== -1) {
+        return 'Google Chrome';
+    } else if (userAgent.indexOf('Firefox') !== -1) {
+        return 'Mozilla Firefox';
+    } else if (userAgent.indexOf('Safari') !== -1) {
+        return 'Apple Safari';
+    } else if (userAgent.indexOf('Edge') !== -1) {
+        return 'Microsoft Edge';
+    } else if (userAgent.indexOf('Opera') !== -1 || userAgent.indexOf('OPR') !== -1) {
+        return 'Opera';
+    } else if (userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident/') !== -1) {
+        return 'Internet Explorer';
+    } else {
+        return 'Unknown Browser';
+    }
+}
+function detectDeviceType() {
+    var isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    var isTablet = /iPad|Android|Tablet/i.test(navigator.userAgent);
+
+    if (isTablet) {
+    return "Tablet"
+    } else if (isMobile) {
+        console.log('Mobile');
+    return "Mobile"
+    } else {
+    return "Desktop"
+    }
+}
+
+function detectOperatingSystem() {
+    var userAgent = navigator.userAgent;
+    if (/Windows/.test(userAgent)) {
+    return "Windows"
+    } else if (/Mac OS|Macintosh/.test(userAgent)) {
+    return "Mac OS"
+    } else if (/Linux/.test(userAgent)) {
+    return "Linux"
+    } else {
+    return "Unknown"
+    }
+}
+
 function analytics(domainID) {
      if (hasVisitedWithinLast12Hours()) {
       return
@@ -42,7 +87,10 @@ function analytics(domainID) {
       status:isNewUser(),
       visitDuration:visitDuration,
       domain:domainID,
-      visitFrom: document.referrer || 'Direct visit'
+      visitFrom: document.referrer || 'Direct visit',
+      browser:getBrowserName(),
+      device:detectDeviceType(),
+      os: detectOperatingSystem()
     })
   )
   setVisitTimestamp();

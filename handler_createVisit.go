@@ -21,6 +21,9 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		VisitDuration int32     `json:"visitDuration"`
 		Domain        uuid.UUID `json:"domain"`
 		VisitFrom     string    `json:"visitFrom"`
+    Browser       string    `json:"browser"`
+    Device        string    `json:"device"`
+    OS            string    `json:"os"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -59,6 +62,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	respondWithJson(w, 200, "success")
 }
 
+// I CBA with this
 func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
@@ -74,11 +78,18 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
+	} 
+  type response struct {
+    Original []database.GetLimitedCountRow `json:"original"`
+    Tester string `json:"testing"`
+  } 
+  resp := response{
+		Original: stats,
+		Tester:   "Hello, testing!",
 	}
-	respondWithJson(w, 200, stats)
+	respondWithJson(w, 200,resp)
 }
 
-// I CBA with this
 func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
@@ -95,7 +106,15 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
 	}
-	respondWithJson(w, 200, stats)
+  type response struct {
+    Original []database.GetSevenDaysRow `json:"original"`
+    Tester string `json:"testing"`
+  }
+  	resp := response{
+		Original: stats,
+		Tester:   "Hello, testing!",
+	}
+	respondWithJson(w, 200, resp)
 }
 func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
@@ -112,6 +131,14 @@ func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
+	} 
+  type response struct {
+    Original []database.GetNinetyDaysRow `json:"original"`
+    Tester string `json:"testing"`
+  }
+  	resp := response{
+		Original: stats,
+		Tester:   "Hello, testing!",
 	}
-	respondWithJson(w, 200, stats)
+	respondWithJson(w, 200, resp)
 }
