@@ -13,9 +13,9 @@ import (
 )
 
 const createVisit = `-- name: CreateVisit :one
-INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom)
-VALUES($1,$2,$3,$4,$5)
-RETURNING createdat, visitorstatus, visitduration, domain, visitfrom
+INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+RETURNING createdat, visitorstatus, visitduration, domain, visitfrom, browser, device, os
 `
 
 type CreateVisitParams struct {
@@ -24,6 +24,9 @@ type CreateVisitParams struct {
 	Visitduration int32
 	Domain        uuid.UUID
 	Visitfrom     string
+	Browser       string
+	Device        string
+	Os            string
 }
 
 func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit, error) {
@@ -33,6 +36,9 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 		arg.Visitduration,
 		arg.Domain,
 		arg.Visitfrom,
+		arg.Browser,
+		arg.Device,
+		arg.Os,
 	)
 	var i Visit
 	err := row.Scan(
@@ -41,8 +47,238 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 		&i.Visitduration,
 		&i.Domain,
 		&i.Visitfrom,
+		&i.Browser,
+		&i.Device,
+		&i.Os,
 	)
 	return i, err
+}
+
+const getBrowserCount30 = `-- name: GetBrowserCount30 :many
+
+SELECT
+    COUNT(*) AS count,
+    browser AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY browser
+`
+
+type GetBrowserCount30Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetBrowserCount30(ctx context.Context, domain uuid.UUID) ([]GetBrowserCount30Row, error) {
+	rows, err := q.db.QueryContext(ctx, getBrowserCount30, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBrowserCount30Row
+	for rows.Next() {
+		var i GetBrowserCount30Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBrowserCount7 = `-- name: GetBrowserCount7 :many
+SELECT
+    COUNT(*) AS count,
+    browser AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY browser
+`
+
+type GetBrowserCount7Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetBrowserCount7(ctx context.Context, domain uuid.UUID) ([]GetBrowserCount7Row, error) {
+	rows, err := q.db.QueryContext(ctx, getBrowserCount7, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBrowserCount7Row
+	for rows.Next() {
+		var i GetBrowserCount7Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBrowserCount90 = `-- name: GetBrowserCount90 :many
+
+SELECT
+    COUNT(*) AS count,
+    browser AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY browser
+`
+
+type GetBrowserCount90Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetBrowserCount90(ctx context.Context, domain uuid.UUID) ([]GetBrowserCount90Row, error) {
+	rows, err := q.db.QueryContext(ctx, getBrowserCount90, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBrowserCount90Row
+	for rows.Next() {
+		var i GetBrowserCount90Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDeviceCount30 = `-- name: GetDeviceCount30 :many
+
+SELECT
+    COUNT(*) AS count,
+    device AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY device
+`
+
+type GetDeviceCount30Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetDeviceCount30(ctx context.Context, domain uuid.UUID) ([]GetDeviceCount30Row, error) {
+	rows, err := q.db.QueryContext(ctx, getDeviceCount30, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDeviceCount30Row
+	for rows.Next() {
+		var i GetDeviceCount30Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDeviceCount7 = `-- name: GetDeviceCount7 :many
+
+SELECT
+    COUNT(*) AS count,
+    device AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY device
+`
+
+type GetDeviceCount7Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetDeviceCount7(ctx context.Context, domain uuid.UUID) ([]GetDeviceCount7Row, error) {
+	rows, err := q.db.QueryContext(ctx, getDeviceCount7, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDeviceCount7Row
+	for rows.Next() {
+		var i GetDeviceCount7Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDeviceCount90 = `-- name: GetDeviceCount90 :many
+
+SELECT
+    COUNT(*) AS count,
+    device AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY device
+`
+
+type GetDeviceCount90Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetDeviceCount90(ctx context.Context, domain uuid.UUID) ([]GetDeviceCount90Row, error) {
+	rows, err := q.db.QueryContext(ctx, getDeviceCount90, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDeviceCount90Row
+	for rows.Next() {
+		var i GetDeviceCount90Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getLimitedCount = `-- name: GetLimitedCount :many
@@ -142,6 +378,117 @@ func (q *Queries) GetNinetyDays(ctx context.Context, domain uuid.UUID) ([]GetNin
 	return items, nil
 }
 
+const getOsCount30 = `-- name: GetOsCount30 :many
+SELECT
+    COUNT(*) AS count,
+    os AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY os
+`
+
+type GetOsCount30Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetOsCount30(ctx context.Context, domain uuid.UUID) ([]GetOsCount30Row, error) {
+	rows, err := q.db.QueryContext(ctx, getOsCount30, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOsCount30Row
+	for rows.Next() {
+		var i GetOsCount30Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOsCount7 = `-- name: GetOsCount7 :many
+SELECT
+    COUNT(*) AS count,
+    os AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY os
+`
+
+type GetOsCount7Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetOsCount7(ctx context.Context, domain uuid.UUID) ([]GetOsCount7Row, error) {
+	rows, err := q.db.QueryContext(ctx, getOsCount7, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOsCount7Row
+	for rows.Next() {
+		var i GetOsCount7Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOsCount90 = `-- name: GetOsCount90 :many
+SELECT
+    COUNT(*) AS count,
+    os AS column_value
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY os
+`
+
+type GetOsCount90Row struct {
+	Count       int64
+	ColumnValue string
+}
+
+func (q *Queries) GetOsCount90(ctx context.Context, domain uuid.UUID) ([]GetOsCount90Row, error) {
+	rows, err := q.db.QueryContext(ctx, getOsCount90, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOsCount90Row
+	for rows.Next() {
+		var i GetOsCount90Row
+		if err := rows.Scan(&i.Count, &i.ColumnValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSevenDays = `-- name: GetSevenDays :many
 SELECT
     COUNT(*) AS domain_count,
@@ -191,7 +538,6 @@ func (q *Queries) GetSevenDays(ctx context.Context, domain uuid.UUID) ([]GetSeve
 }
 
 const getTotalCount = `-- name: GetTotalCount :one
-
 SELECT
     COUNT(*) AS total_count,
     COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,

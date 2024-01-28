@@ -34,7 +34,7 @@ func (apiCfg *apiConfig) handlerGetFreeDomain(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
 	}
-  w.Header().Set("Cache-Control", "public, max-age=100")
+  w.Header().Set("Cache-Control", "public, max-age=1000")
 	stats2, err := apiCfg.DB.GetPrevMonthStats(r.Context(), domainID)
 	if err != nil || stats2.TotalCount == 0 {
   var infinite extendDomain
