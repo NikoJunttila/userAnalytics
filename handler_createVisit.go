@@ -106,14 +106,20 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
 	}
+  stats2 , err := apiCfg.DB.GetOsCount30(r.Context(), params.DomainID)
   type response struct {
     Original []database.GetSevenDaysRow `json:"original"`
-    Tester string `json:"testing"`
+    Tester  []database.GetOsCount30Row `json:"os"`
   }
   	resp := response{
 		Original: stats,
-		Tester:   "Hello, testing!",
+		Tester:   stats2,
 	}
+  stats3 , err := apiCfg.DB.GetOsCount(r.Context(), database.GetOsCountParams{
+   Domain: params.DomainID,
+   Column2: 7, 
+  })
+  fmt.Println(stats3)
 	respondWithJson(w, 200, resp)
 }
 func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
