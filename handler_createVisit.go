@@ -5,12 +5,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
-//NOBODY LOOK HERE SECRET STUFF AND NOT SUPER BAD CODE
+
+// NOBODY LOOK HERE SECRET STUFF AND NOT SUPER BAD CODE
+func extractDomain(referrer string) (string, error) {
+	if referrer == "Direct visit" {
+		return referrer, nil
+	}
+	parsedURL, err := url.Parse(referrer)
+	if err != nil {
+		return "", err
+	}
+
+	hostParts := strings.Split(parsedURL.Hostname(), ".")
+	if len(hostParts) > 1 {
+		return hostParts[len(hostParts)-2], nil
+	}
+
+	return parsedURL.Hostname(), nil
+}
 func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
@@ -21,9 +41,9 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		VisitDuration int32     `json:"visitDuration"`
 		Domain        uuid.UUID `json:"domain"`
 		VisitFrom     string    `json:"visitFrom"`
-    Browser       string    `json:"browser"`
-    Device        string    `json:"device"`
-    OS            string    `json:"os"`
+		Browser       string    `json:"browser"`
+		Device        string    `json:"device"`
+		OS            string    `json:"os"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -33,6 +53,10 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))
 		return
 	}
+	cleanedRef, err := extractDomain(params.VisitFrom)
+	if err != nil {
+		cleanedRef = "Direct visit"
+	}
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {
@@ -41,31 +65,34 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 			Visitorstatus: params.VisitStat,
 			Visitduration: params.VisitDuration,
 			Domain:        params.Domain,
-			Visitfrom:     params.VisitFrom,
-      Device:        params.Device,
-      Os:            params.OS,
-      Browser:       params.Browser,
+			Visitfrom:     cleanedRef,
+			Device:        params.Device,
+			Os:            params.OS,
+			Browser:       params.Browser,
 		})
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
 		}
-  var uniqueVisit int32 = 0
-  if params.VisitStat == "new"{
-  uniqueVisit = 1}
-	err = apiCfg.DB.UpdateDomain(dbCtx, database.UpdateDomainParams{
-		  ID:          params.Domain,
-		  TotalVisits: 1,
-		  TotalUnique: uniqueVisit,
-	})
-  if err != nil {
-		fmt.Printf("error: %v \n", err)
-  }
+		var uniqueVisit int32 = 0
+		if params.VisitStat == "new" {
+			uniqueVisit = 1
+		}
+		err = apiCfg.DB.UpdateDomain(dbCtx, database.UpdateDomainParams{
+			ID:          params.Domain,
+			TotalVisits: 1,
+			TotalUnique: uniqueVisit,
+		})
+		if err != nil {
+			fmt.Printf("error: %v \n", err)
+		}
 	}()
 	respondWithJson(w, 200, "success")
 }
 
 // I CBA with this
+// Testing speeds of different routines
 func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
 	type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
 	}
@@ -76,43 +103,68 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
-	stats, err := apiCfg.DB.GetSevenDays(r.Context(), params.DomainID)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "DB error")
-		return
+	var wg sync.WaitGroup
+	wg.Add(1)
+	var stats []database.GetSevenDaysRow
+	go func() {
+		defer wg.Done()
+		stats, err = apiCfg.DB.GetSevenDays(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+	}()
+	var os []database.GetOsCount7Row
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		os, err = apiCfg.DB.GetOsCount7(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+	}()
+	var device []database.GetDeviceCount7Row
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		device, err = apiCfg.DB.GetDeviceCount7(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+	}()
+	var browser []database.GetBrowserCount7Row
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		browser, err = apiCfg.DB.GetBrowserCount7(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+	}()
+	type response struct {
+		Original []database.GetSevenDaysRow     `json:"original"`
+		Os       []database.GetOsCount7Row      `json:"os"`
+		Device   []database.GetDeviceCount7Row  `json:"device"`
+		Browser  []database.GetBrowserCount7Row `json:"browser"`
 	}
-  os , err := apiCfg.DB.GetOsCount7(r.Context(), params.DomainID)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "DB error")
-		return
-	}
-  device , err := apiCfg.DB.GetDeviceCount7(r.Context(), params.DomainID)
- 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "DB error")
-		return
-	}
-  browser , err := apiCfg.DB.GetBrowserCount7(r.Context(), params.DomainID)
-  if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "DB error")
-		return
-	}
-  type response struct {
-    Original []database.GetSevenDaysRow `json:"original"`
-    Os  []database.GetOsCount7Row `json:"os"`
-    Device  []database.GetDeviceCount7Row `json:"device"`
-    Browser  []database.GetBrowserCount7Row `json:"browser"`
-  }
-  	resp := response{
+	wg.Wait()
+	resp := response{
 		Original: stats,
-		Os:   os,
-    Device: device,
-    Browser: browser,
+		Os:       os,
+		Device:   device,
+		Browser:  browser,
 	}
+	elapsed := time.Since(startTime)
+	fmt.Printf("my waitgroup funcs took %s\n", elapsed)
 	respondWithJson(w, 200, resp)
 }
-//30 days
+
+// 30 days
 func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Request) {
-startTime := time.Now()
+	startTime := time.Now()
 	type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
 	}
@@ -127,46 +179,45 @@ startTime := time.Now()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
-	} 
-os, err := apiCfg.DB.GetOsCount30(r.Context(), params.DomainID)
-if err != nil {
-	respondWithError(w, http.StatusInternalServerError, "DB error for Os")
-	return
-}
+	}
+	os, err := apiCfg.DB.GetOsCount30(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error for Os")
+		return
+	}
 
-device, err := apiCfg.DB.GetDeviceCount30(r.Context(), params.DomainID)
-if err != nil {
-	respondWithError(w, http.StatusInternalServerError, "DB error for Device")
-	return
-}
+	device, err := apiCfg.DB.GetDeviceCount30(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error for Device")
+		return
+	}
 
-browser, err := apiCfg.DB.GetBrowserCount30(r.Context(), params.DomainID)
-if err != nil {
-	respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
-	return
-}
+	browser, err := apiCfg.DB.GetBrowserCount30(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
+		return
+	}
 
-type response30 struct {
-	Original []database.GetLimitedCountRow `json:"original"`
-	Os       []database.GetOsCount30Row        `json:"os"`
-	Device   []database.GetDeviceCount30Row    `json:"device"`
-	Browser  []database.GetBrowserCount30Row   `json:"browser"`
-}
+	type response30 struct {
+		Original []database.GetLimitedCountRow   `json:"original"`
+		Os       []database.GetOsCount30Row      `json:"os"`
+		Device   []database.GetDeviceCount30Row  `json:"device"`
+		Browser  []database.GetBrowserCount30Row `json:"browser"`
+	}
 
-resp := response30{
-	Original: stats,
-	Os:       os,
-	Device:   device,
-	Browser:  browser,
-}	
+	resp := response30{
+		Original: stats,
+		Os:       os,
+		Device:   device,
+		Browser:  browser,
+	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("my normal func took %s\n", elapsed)
-respondWithJson(w, 200,resp)
+	respondWithJson(w, 200, resp)
 }
 
-
 func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
-startTime := time.Now()
+	startTime := time.Now()
 	type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
 	}
@@ -251,13 +302,12 @@ startTime := time.Now()
 	close(browserChan)
 	close(errChan)
 
-	
-type response90 struct {
-	Original []database.GetNinetyDaysRow       `json:"original"`
-	Os       []database.GetOsCount90Row       `json:"os"`
-	Device   []database.GetDeviceCount90Row   `json:"device"`
-	Browser  []database.GetBrowserCount90Row  `json:"browser"`
-}
+	type response90 struct {
+		Original []database.GetNinetyDaysRow     `json:"original"`
+		Os       []database.GetOsCount90Row      `json:"os"`
+		Device   []database.GetDeviceCount90Row  `json:"device"`
+		Browser  []database.GetBrowserCount90Row `json:"browser"`
+	}
 
 	resp := response90{
 		Original: stats,
@@ -267,7 +317,6 @@ type response90 struct {
 	}
 
 	elapsed := time.Since(startTime)
-	fmt.Printf("my goroutine func took %s\n", elapsed)
+	fmt.Printf("my chatgippity channels func took %s\n", elapsed)
 	respondWithJson(w, 200, resp)
 }
-
