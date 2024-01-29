@@ -85,14 +85,6 @@ function getOS() {
 
   if (macosPlatforms.indexOf(platform) !== -1) {
     os = "Mac";
-    var currentUrl = window.location.href;
-
-    // Check if the URL contains "localhost"
-    if (currentUrl.includes("localhost")) {
-      console.log("This URL contains localhost.");
-    } else {
-      console.log("This URL does not contain localhost.");
-    }
   } else if (iosPlatforms.indexOf(platform) !== -1) {
     os = "iOS";
   } else if (windowsPlatforms.indexOf(platform) !== -1) {
@@ -102,15 +94,11 @@ function getOS() {
   } else if (/Linux/.test(platform)) {
     os = "Linux";
   }
-
   return os;
 }
 
 function analytics(domainID) {
-  if (testLocal()) {
-    return;
-  }
-  if (hasVisitedWithinLast12Hours()) {
+  if (testLocal() || hasVisitedWithinLast12Hours()) {
     return;
   }
   let visitDuration = 0;
@@ -120,7 +108,6 @@ function analytics(domainID) {
     visitDuration = ~~floatValue;
   }
   const serverURL = "https://analytics-derp.koyeb.app/v1/visit";
-  // const serverURL = "http://localhost:8000/v1/visit"
   navigator.sendBeacon(
     serverURL,
     JSON.stringify({
