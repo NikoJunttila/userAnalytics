@@ -35,7 +35,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
-	}
+  }
 	type parameters struct {
 		VisitStat     string    `json:"status"`
 		VisitDuration int32     `json:"visitDuration"`
@@ -57,6 +57,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		cleanedRef = "Direct visit"
 	}
+  
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {

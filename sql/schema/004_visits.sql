@@ -8,7 +8,8 @@ CREATE TABLE visits (
   visitFrom TEXT NOT NULL,
   browser TEXT NOT NULL,
   device TEXT NOT NULL,
-  os TEXT NOT NULL
+  os TEXT NOT NULL,
+  bounce BOOL
 );
 
 -- +goose Down
