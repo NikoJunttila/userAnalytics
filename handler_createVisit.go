@@ -57,7 +57,11 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		cleanedRef = "Direct visit"
 	}
-  
+  bounced := false
+  if params.VisitDuration < 5{
+    bounced = true
+  }
+
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {
