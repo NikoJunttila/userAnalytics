@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,7 +27,7 @@ type CreateVisitParams struct {
 	Browser       string
 	Device        string
 	Os            string
-	Bounce        sql.NullBool
+	Bounce        bool
 }
 
 func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit, error) {

@@ -5,7 +5,6 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,5 +57,5 @@ type Visit struct {
 	Browser       string
 	Device        string
 	Os            string
-	Bounce        sql.NullBool
+	Bounce        bool
 }

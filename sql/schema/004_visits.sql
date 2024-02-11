@@ -9,7 +9,7 @@ CREATE TABLE visits (
   browser TEXT NOT NULL,
   device TEXT NOT NULL,
   os TEXT NOT NULL,
-  bounce BOOL
+  bounce BOOL NOT NULL
 );
 
 -- +goose Down
