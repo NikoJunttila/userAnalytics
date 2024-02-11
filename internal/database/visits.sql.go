@@ -290,7 +290,8 @@ SELECT
     COUNT(*) AS domain_count,
     COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
     CEIL(AVG(visitduration)) AS avg_visit_duration,
-    visitfrom, COUNT(*) AS count
+    visitfrom, COUNT(*) AS count,
+	  CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
 FROM visits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
 GROUP BY visitfrom
@@ -302,6 +303,7 @@ type GetLimitedCountRow struct {
 	AvgVisitDuration float64
 	Visitfrom        string
 	Count            int64
+	Bounced          float64
 }
 
 func (q *Queries) GetLimitedCount(ctx context.Context, domain uuid.UUID) ([]GetLimitedCountRow, error) {
@@ -319,6 +321,7 @@ func (q *Queries) GetLimitedCount(ctx context.Context, domain uuid.UUID) ([]GetL
 			&i.AvgVisitDuration,
 			&i.Visitfrom,
 			&i.Count,
+			&i.Bounced,
 		); err != nil {
 			return nil, err
 		}
@@ -338,7 +341,8 @@ SELECT
     COUNT(*) AS domain_count,
     COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
     CEIL(AVG(visitduration)) AS avg_visit_duration,
-    visitfrom, COUNT(*) AS count
+    visitfrom, COUNT(*) AS count,
+	  CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
 FROM visits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
 GROUP BY visitfrom
@@ -350,6 +354,7 @@ type GetNinetyDaysRow struct {
 	AvgVisitDuration float64
 	Visitfrom        string
 	Count            int64
+	Bounced          float64
 }
 
 func (q *Queries) GetNinetyDays(ctx context.Context, domain uuid.UUID) ([]GetNinetyDaysRow, error) {
@@ -367,6 +372,7 @@ func (q *Queries) GetNinetyDays(ctx context.Context, domain uuid.UUID) ([]GetNin
 			&i.AvgVisitDuration,
 			&i.Visitfrom,
 			&i.Count,
+			&i.Bounced,
 		); err != nil {
 			return nil, err
 		}
@@ -497,7 +503,8 @@ SELECT
     COUNT(*) AS domain_count,
     COUNT(CASE WHEN visitorstatus = 'new' THEN 1 END) AS new_visitor_count,
     CEIL(AVG(visitduration)) AS avg_visit_duration,
-    visitfrom, COUNT(*) AS count
+    visitfrom, COUNT(*) AS count,
+	  CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
 FROM visits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
 GROUP BY visitfrom
@@ -509,6 +516,7 @@ type GetSevenDaysRow struct {
 	AvgVisitDuration float64
 	Visitfrom        string
 	Count            int64
+	Bounced          float64
 }
 
 func (q *Queries) GetSevenDays(ctx context.Context, domain uuid.UUID) ([]GetSevenDaysRow, error) {
@@ -526,6 +534,7 @@ func (q *Queries) GetSevenDays(ctx context.Context, domain uuid.UUID) ([]GetSeve
 			&i.AvgVisitDuration,
 			&i.Visitfrom,
 			&i.Count,
+			&i.Bounced,
 		); err != nil {
 			return nil, err
 		}
