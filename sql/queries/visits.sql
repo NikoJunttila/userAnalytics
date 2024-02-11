@@ -123,19 +123,19 @@ GROUP BY device;
 SELECT
 	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
 FROM visits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days';
 --
 
 -- name: GetBounce30 :one
 SELECT
 	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
 FROM visits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days';
 --
 
 -- name: GetBounce90 :one
 SELECT
 	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
 FROM visits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days';
 --
