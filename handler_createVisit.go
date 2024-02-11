@@ -61,7 +61,9 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
   if params.VisitDuration < 5{
     bounced = true
   }
-
+  if params.VisitDuration > 7500 {
+    params.VisitDuration = 300
+  }
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {
@@ -74,6 +76,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 			Device:        params.Device,
 			Os:            params.OS,
 			Browser:       params.Browser,
+      Bounce:        bounced,
 		})
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
