@@ -7,15 +7,16 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 const createVisit = `-- name: CreateVisit :one
-INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8)
-RETURNING createdat, visitorstatus, visitduration, domain, visitfrom, browser, device, os
+INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os,bounce)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+RETURNING createdat, visitorstatus, visitduration, domain, visitfrom, browser, device, os, bounce
 `
 
 type CreateVisitParams struct {
@@ -27,6 +28,7 @@ type CreateVisitParams struct {
 	Browser       string
 	Device        string
 	Os            string
+	Bounce        sql.NullBool
 }
 
 func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit, error) {
@@ -39,6 +41,7 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 		arg.Browser,
 		arg.Device,
 		arg.Os,
+		arg.Bounce,
 	)
 	var i Visit
 	err := row.Scan(
@@ -50,6 +53,7 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 		&i.Browser,
 		&i.Device,
 		&i.Os,
+		&i.Bounce,
 	)
 	return i, err
 }
