@@ -1,7 +1,7 @@
 function isNewUser() {
-  const visited = localStorage.getItem("visited");
+  const visited = localStorage.getItem("vis123");
   if (visited === null) {
-    localStorage.setItem("visited", "true");
+    localStorage.setItem("vis123", "true");
     return "new";
   } else {
     return "returning";
@@ -13,10 +13,10 @@ function startVisitTracking() {
 }
 function setVisitTimestamp() {
   const currentTimestamp = new Date().getTime();
-  localStorage.setItem("lastVisitTimestamp", currentTimestamp.toString());
+  localStorage.setItem("lvt123", currentTimestamp.toString());
 }
 function hasVisitedWithinLast12Hours() {
-  const lastVisitTimestamp = localStorage.getItem("lastVisitTimestamp");
+  const lastVisitTimestamp = localStorage.getItem("lvt123");
   if (lastVisitTimestamp) {
     const currentTime = new Date().getTime();
     const lastVisitTime = parseInt(lastVisitTimestamp, 10);

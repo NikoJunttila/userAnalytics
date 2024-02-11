@@ -57,4 +57,5 @@ type Visit struct {
 	Browser       string
 	Device        string
 	Os            string
+	Bounce        bool
 }

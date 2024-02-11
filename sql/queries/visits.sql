@@ -1,6 +1,6 @@
 -- name: CreateVisit :one
-INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os,bounce)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
 RETURNING *;
 --
 -- name: GetTotalCount :one
@@ -118,4 +118,24 @@ SELECT
 FROM visits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
 GROUP BY device;
+--
+-- name: GetBounce7 :one
+SELECT
+	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days';
+--
+
+-- name: GetBounce30 :one
+SELECT
+	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days';
+--
+
+-- name: GetBounce90 :one
+SELECT
+	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days';
 --

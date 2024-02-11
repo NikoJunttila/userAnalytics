@@ -13,9 +13,9 @@ import (
 )
 
 const createVisit = `-- name: CreateVisit :one
-INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8)
-RETURNING createdat, visitorstatus, visitduration, domain, visitfrom, browser, device, os
+INSERT INTO visits(createdat,visitorstatus,visitDuration,domain,visitfrom,browser,device,os,bounce)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+RETURNING createdat, visitorstatus, visitduration, domain, visitfrom, browser, device, os, bounce
 `
 
 type CreateVisitParams struct {
@@ -27,6 +27,7 @@ type CreateVisitParams struct {
 	Browser       string
 	Device        string
 	Os            string
+	Bounce        bool
 }
 
 func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit, error) {
@@ -39,6 +40,7 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 		arg.Browser,
 		arg.Device,
 		arg.Os,
+		arg.Bounce,
 	)
 	var i Visit
 	err := row.Scan(
@@ -50,8 +52,53 @@ func (q *Queries) CreateVisit(ctx context.Context, arg CreateVisitParams) (Visit
 		&i.Browser,
 		&i.Device,
 		&i.Os,
+		&i.Bounce,
 	)
 	return i, err
+}
+
+const getBounce30 = `-- name: GetBounce30 :one
+
+SELECT
+	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+`
+
+func (q *Queries) GetBounce30(ctx context.Context, domain uuid.UUID) (float64, error) {
+	row := q.db.QueryRowContext(ctx, getBounce30, domain)
+	var bounced float64
+	err := row.Scan(&bounced)
+	return bounced, err
+}
+
+const getBounce7 = `-- name: GetBounce7 :one
+SELECT
+	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+`
+
+func (q *Queries) GetBounce7(ctx context.Context, domain uuid.UUID) (float64, error) {
+	row := q.db.QueryRowContext(ctx, getBounce7, domain)
+	var bounced float64
+	err := row.Scan(&bounced)
+	return bounced, err
+}
+
+const getBounce90 = `-- name: GetBounce90 :one
+
+SELECT
+	CEIL((COUNT(CASE WHEN bounce = true THEN 1 END) * 100.0 / COUNT(*))) AS bounced
+FROM visits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+`
+
+func (q *Queries) GetBounce90(ctx context.Context, domain uuid.UUID) (float64, error) {
+	row := q.db.QueryRowContext(ctx, getBounce90, domain)
+	var bounced float64
+	err := row.Scan(&bounced)
+	return bounced, err
 }
 
 const getBrowserCount30 = `-- name: GetBrowserCount30 :many

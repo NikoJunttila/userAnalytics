@@ -35,7 +35,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
-	}
+  }
 	type parameters struct {
 		VisitStat     string    `json:"status"`
 		VisitDuration int32     `json:"visitDuration"`
@@ -54,9 +54,16 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	cleanedRef, err := extractDomain(params.VisitFrom)
-	if err != nil {
+	if err != nil || len(cleanedRef) > 2 {
 		cleanedRef = "Direct visit"
 	}
+  bounced := false
+  if params.VisitDuration < 5{
+    bounced = true
+  }
+  if params.VisitDuration > 7500 {
+    params.VisitDuration = 300
+  }
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {
@@ -69,6 +76,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 			Device:        params.Device,
 			Os:            params.OS,
 			Browser:       params.Browser,
+      Bounce:        bounced,
 		})
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
@@ -144,11 +152,22 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}()
+  var bounceRate float64 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		bounceRate, err = apiCfg.DB.GetBounce7(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+	}()
 	type response struct {
 		Original []database.GetSevenDaysRow     `json:"original"`
 		Os       []database.GetOsCount7Row      `json:"os"`
 		Device   []database.GetDeviceCount7Row  `json:"device"`
 		Browser  []database.GetBrowserCount7Row `json:"browser"`
+    BounceRate float64                      `json:"bounce"` 
 	}
 	wg.Wait()
 	resp := response{
@@ -156,6 +175,7 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 		Os:       os,
 		Device:   device,
 		Browser:  browser,
+    BounceRate: bounceRate,
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("my waitgroup funcs took %s\n", elapsed)
@@ -197,12 +217,18 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
 		return
 	}
+  bounceRate, err := apiCfg.DB.GetBounce30(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
 
 	type response30 struct {
 		Original []database.GetLimitedCountRow   `json:"original"`
 		Os       []database.GetOsCount30Row      `json:"os"`
 		Device   []database.GetDeviceCount30Row  `json:"device"`
 		Browser  []database.GetBrowserCount30Row `json:"browser"`
+    BounceRate float64                      `json:"bounce"` 
 	}
 
 	resp := response30{
@@ -210,6 +236,7 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		Os:       os,
 		Device:   device,
 		Browser:  browser,
+    BounceRate: bounceRate,
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("my normal func took %s\n", elapsed)
@@ -217,8 +244,7 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 }
 
 func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now()
-	type parameters struct {
+type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
@@ -228,95 +254,49 @@ func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
-
-	// Create channels to receive results from goroutines
-	statsChan := make(chan []database.GetNinetyDaysRow)
-	osChan := make(chan []database.GetOsCount90Row)
-	deviceChan := make(chan []database.GetDeviceCount90Row)
-	browserChan := make(chan []database.GetBrowserCount90Row)
-	errChan := make(chan error)
-
-	// Use goroutines to execute queries concurrently
-	go func() {
-		stats, err := apiCfg.DB.GetNinetyDays(r.Context(), params.DomainID)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		statsChan <- stats
-	}()
-
-	go func() {
-		os, err := apiCfg.DB.GetOsCount90(r.Context(), params.DomainID)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		osChan <- os
-	}()
-
-	go func() {
-		device, err := apiCfg.DB.GetDeviceCount90(r.Context(), params.DomainID)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		deviceChan <- device
-	}()
-
-	go func() {
-		browser, err := apiCfg.DB.GetBrowserCount90(r.Context(), params.DomainID)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		browserChan <- browser
-	}()
-
-	// Wait for all goroutines to finish
-	var stats []database.GetNinetyDaysRow
-	var os []database.GetOsCount90Row
-	var device []database.GetDeviceCount90Row
-	var browser []database.GetBrowserCount90Row
-
-	for i := 0; i < 4; i++ {
-		select {
-		case result := <-statsChan:
-			stats = result
-		case result := <-osChan:
-			os = result
-		case result := <-deviceChan:
-			device = result
-		case result := <-browserChan:
-			browser = result
-		case err := <-errChan:
-			respondWithError(w, http.StatusInternalServerError, "DB error: "+err.Error())
-			return
-		}
+	stats, err := apiCfg.DB.GetNinetyDays(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+		return
+	}
+	os, err := apiCfg.DB.GetOsCount90(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error for Os")
+		return
 	}
 
-	// Close channels
-	close(statsChan)
-	close(osChan)
-	close(deviceChan)
-	close(browserChan)
-	close(errChan)
+	device, err := apiCfg.DB.GetDeviceCount90(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error for Device")
+		return
+	}
 
-	type response90 struct {
-		Original []database.GetNinetyDaysRow     `json:"original"`
+	browser, err := apiCfg.DB.GetBrowserCount90(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
+		return
+	}
+  bounceRate, err := apiCfg.DB.GetBounce90(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+
+	type response30 struct {
+		Original []database.GetNinetyDaysRow   `json:"original"`
 		Os       []database.GetOsCount90Row      `json:"os"`
 		Device   []database.GetDeviceCount90Row  `json:"device"`
 		Browser  []database.GetBrowserCount90Row `json:"browser"`
+    BounceRate float64                      `json:"bounce"` 
 	}
 
-	resp := response90{
+	resp := response30{
 		Original: stats,
 		Os:       os,
 		Device:   device,
 		Browser:  browser,
+    BounceRate: bounceRate,
 	}
-
-	elapsed := time.Since(startTime)
-	fmt.Printf("my chatgippity channels func took %s\n", elapsed)
 	respondWithJson(w, 200, resp)
+
 }
