@@ -132,8 +132,8 @@ function isNewUser() {
 
   const observer = new MutationObserver(function(mutations) {
     if (location.href !== previousUrl) {
+    if (testLocal())return
       previousUrl = location.href;
-      console.log('URL changed:', location.href);
       navigator.sendBeacon(
         `${serverURL}pageVisit`,
         JSON.stringify({
