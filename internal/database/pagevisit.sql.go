@@ -35,23 +35,18 @@ const getPages = `-- name: GetPages :many
 
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL $2
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '$2'
 GROUP BY page
 ORDER BY page_count DESC
 `
-
-type GetPagesParams struct {
-	Domain  uuid.UUID
-	Column2 int64
-}
 
 type GetPagesRow struct {
 	Page      string
 	PageCount int64
 }
 
-func (q *Queries) GetPages(ctx context.Context, arg GetPagesParams) ([]GetPagesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getPages, arg.Domain, arg.Column2)
+func (q *Queries) GetPages(ctx context.Context, domain uuid.UUID) ([]GetPagesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPages, domain)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +68,44 @@ func (q *Queries) GetPages(ctx context.Context, arg GetPagesParams) ([]GetPagesR
 	return items, nil
 }
 
+const getPages2 = `-- name: GetPages2 :many
+SELECT page, COUNT(*) as page_count
+FROM pagevisits
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '@interval'
+GROUP BY page
+ORDER BY page_count DESC
+`
+
+type GetPages2Row struct {
+	Page      string
+	PageCount int64
+}
+
+func (q *Queries) GetPages2(ctx context.Context, domain uuid.UUID) ([]GetPages2Row, error) {
+	rows, err := q.db.QueryContext(ctx, getPages2, domain)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPages2Row
+	for rows.Next() {
+		var i GetPages2Row
+		if err := rows.Scan(&i.Page, &i.PageCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPages30 = `-- name: GetPages30 :many
+
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
