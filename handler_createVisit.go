@@ -205,7 +205,16 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error for Os")
 		return
 	}
-
+  // pages, err := apiCfg.DB.GetPages(r.Context(), database.GetPagesParams{
+  //   Domain: params.DomainID,
+  //   Column2: 2592000,
+  // })
+  pages, err := apiCfg.DB.GetPages30(r.Context(), params.DomainID)
+  if err != nil {
+    fmt.Println(err)
+		respondWithError(w, http.StatusInternalServerError, "DB error for pages")
+    return
+  }
 	device, err := apiCfg.DB.GetDeviceCount30(r.Context(), params.DomainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error for Device")
@@ -228,7 +237,8 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		Os       []database.GetOsCount30Row      `json:"os"`
 		Device   []database.GetDeviceCount30Row  `json:"device"`
 		Browser  []database.GetBrowserCount30Row `json:"browser"`
-    BounceRate float64                      `json:"bounce"` 
+    BounceRate float64                      `json:"bounce"`
+    Pages []database.GetPages30Row  `json:"pages"`
 	}
 
 	resp := response30{
@@ -237,7 +247,9 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		Device:   device,
 		Browser:  browser,
     BounceRate: bounceRate,
+    Pages: pages,
 	}
+  fmt.Println(pages)
 	elapsed := time.Since(startTime)
 	fmt.Printf("my normal func took %s\n", elapsed)
 	respondWithJson(w, 200, resp)
