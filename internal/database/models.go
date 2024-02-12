@@ -30,6 +30,12 @@ type DomainFollow struct {
 	DomainName string
 }
 
+type Pagevisit struct {
+	Createdat time.Time
+	Domain    uuid.UUID
+	Page      string
+}
+
 type PasswordReset struct {
 	ID         uuid.UUID
 	Expiration time.Time
