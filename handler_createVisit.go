@@ -97,6 +97,66 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	respondWithJson(w, 200, "success")
 }
 
+func getPageNameFromURL(rawURL string) (string, error) {
+	// Parse the URL
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+	// Get the path from the URL
+	path := parsedURL.Path
+	// Remove leading slash if present
+	path = strings.TrimPrefix(path, "/")
+	// Split the path by slash to get individual components
+	components := strings.Split(path, "/")
+	// Reconstruct the path without UUIDs or other user-specific data
+	var newPathComponents []string
+	for _, component := range components {
+		// Ignore if it looks like a UUID
+		if len(component) == 36 && component[8] == '-' && component[13] == '-' && component[18] == '-' && component[23] == '-' {
+			continue
+		}
+		// Add non-user-specific components to the new path
+		newPathComponents = append(newPathComponents, component)
+	}
+	// Join the components to form the new path
+	newPath := "/" + strings.Join(newPathComponents, "/")
+	return newPath, nil
+}
+
+func (apiCfg *apiConfig) handlerCreatePageVisit(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+  }
+	type parameters struct {
+		Domain        uuid.UUID `json:"domain"`
+		Page     string    `json:"page"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		fmt.Printf("error: %v \n", err)
+		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))
+		return
+	}
+  pageName, err := getPageNameFromURL(params.Page) 
+  if err != nil || len(pageName) == 0 {
+    pageName = "/"
+  }
+  _, err = apiCfg.DB.CreatePageVisit(r.Context(), database.CreatePageVisitParams{
+    Createdat:     time.Now().UTC(),
+    Domain: params.Domain,
+    Page: pageName, 
+  })
+  if err != nil {
+    fmt.Printf("error with pagevisit: %v \n",err)
+    return
+  }
+	respondWithJson(w, 200, "success")
+}
+
 // I CBA with this
 // Testing speeds of different routines
 func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Request) {
@@ -162,12 +222,23 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}()
+  var pages []database.GetPages7Row 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		pages, err = apiCfg.DB.GetPages7(r.Context(), params.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "DB error")
+			return
+		}
+	}()
 	type response struct {
 		Original []database.GetSevenDaysRow     `json:"original"`
 		Os       []database.GetOsCount7Row      `json:"os"`
 		Device   []database.GetDeviceCount7Row  `json:"device"`
 		Browser  []database.GetBrowserCount7Row `json:"browser"`
     BounceRate float64                      `json:"bounce"` 
+    Pages []database.GetPages7Row           `json:"pages"`
 	}
 	wg.Wait()
 	resp := response{
@@ -176,6 +247,7 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 		Device:   device,
 		Browser:  browser,
     BounceRate: bounceRate,
+    Pages: pages,
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("my waitgroup funcs took %s\n", elapsed)
@@ -205,10 +277,6 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error for Os")
 		return
 	}
-  // pages, err := apiCfg.DB.GetPages(r.Context(), database.GetPagesParams{
-  //   Domain: params.DomainID,
-  //   Column2: 2592000,
-  // })
   pages, err := apiCfg.DB.GetPages30(r.Context(), params.DomainID)
   if err != nil {
     fmt.Println(err)
@@ -293,14 +361,20 @@ type parameters struct {
 			respondWithError(w, http.StatusInternalServerError, "DB error")
 			return
 		}
-
+  pages, err := apiCfg.DB.GetPages90(r.Context(), params.DomainID)
+  if err != nil {
+    fmt.Println(err)
+		respondWithError(w, http.StatusInternalServerError, "DB error for pages")
+    return
+  }
 	type response30 struct {
 		Original []database.GetNinetyDaysRow   `json:"original"`
 		Os       []database.GetOsCount90Row      `json:"os"`
 		Device   []database.GetDeviceCount90Row  `json:"device"`
 		Browser  []database.GetBrowserCount90Row `json:"browser"`
     BounceRate float64                      `json:"bounce"` 
-	}
+    Pages []database.GetPages90Row `json:"pages"`
+  }
 
 	resp := response30{
 		Original: stats,
@@ -308,6 +382,7 @@ type parameters struct {
 		Device:   device,
 		Browser:  browser,
     BounceRate: bounceRate,
+    Pages: pages,
 	}
 	respondWithJson(w, 200, resp)
 
