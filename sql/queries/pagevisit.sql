@@ -4,10 +4,10 @@ VALUES($1,$2,$3)
 RETURNING *;
 --
 
--- name: GetPages :many
+-- name: GetPages7 :many
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '$2'
+WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
 GROUP BY page
 ORDER BY page_count DESC;
 --
@@ -23,13 +23,6 @@ ORDER BY page_count DESC;
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
 WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
-GROUP BY page
-ORDER BY page_count DESC;
---
--- name: GetPages2 :many
-SELECT page, COUNT(*) as page_count
-FROM pagevisits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '@interval'
 GROUP BY page
 ORDER BY page_count DESC;
 --
