@@ -66,6 +66,7 @@ func main() {
   v1Router.Get("/err",handlerErr)
   v1Router.Post("/createuser",apiCfg.handlerCreateUser)
   v1Router.Post("/visit",apiCfg.handlerCreateVisit)
+  v1Router.Post("/pageVisit",apiCfg.handlerCreatePageVisit)
   v1Router.Post("/visits/7", apiCfg.handlerSevenVisits)
   v1Router.Post("/visits/30", apiCfg.handlerLimitedVisits)
   v1Router.Post("/visits/90", apiCfg.handlerNinetyVisits)
