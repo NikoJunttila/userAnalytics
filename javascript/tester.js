@@ -146,3 +146,5 @@ function isNewUser() {
   
   const config = { subtree: true, childList: true };
   observer.observe(document.body, config);
+
+  const socket = new WebSocket("wss://analytics-derp.koyeb.app/v1/ws");

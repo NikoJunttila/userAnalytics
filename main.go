@@ -12,14 +12,12 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 
-  _"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
-type apiConfig struct{
-  DB *database.Queries
+type apiConfig struct {
+	DB *database.Queries
 }
-
-
 
 func main() {
 	r := chi.NewRouter()
@@ -33,13 +31,13 @@ func main() {
 	if portString == "" {
 		log.Fatal("DB_URL is not found")
 	}
-  connection, err := sql.Open("postgres", dbURL)
-  if err != nil {
-    log.Fatal("cant connect to database",err)
-  }
-  apiCfg := apiConfig{
-    DB: database.New(connection),
-  }
+	connection, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("cant connect to database", err)
+	}
+	apiCfg := apiConfig{
+		DB: database.New(connection),
+	}
 	emailCode := os.Getenv("emailCode")
 	if emailCode == "" {
 		log.Fatal("emailCode is not found")
@@ -60,29 +58,31 @@ func main() {
 		w.Write([]byte("welcome"))
 	})
 
-  v1Router := chi.NewRouter()
+	v1Router := chi.NewRouter()
 
-  v1Router.Get("/healthz", handlerReadiness)
-  v1Router.Get("/err",handlerErr)
-  v1Router.Post("/createuser",apiCfg.handlerCreateUser)
-  v1Router.Post("/visit",apiCfg.handlerCreateVisit)
-  v1Router.Post("/pageVisit",apiCfg.handlerCreatePageVisit)
-  v1Router.Post("/visits/7", apiCfg.handlerSevenVisits)
-  v1Router.Post("/visits/30", apiCfg.handlerLimitedVisits)
-  v1Router.Post("/visits/90", apiCfg.handlerNinetyVisits)
-  v1Router.Post("/login", apiCfg.handlerLogin)    
-  v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
-  v1Router.Post("/domain",apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
-  v1Router.Post("/domains", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
-  v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
+	v1Router.Get("/healthz", handlerReadiness)
+	v1Router.Get("/err", handlerErr)
+	v1Router.Post("/createuser", apiCfg.handlerCreateUser)
+	v1Router.Post("/visit", apiCfg.handlerCreateVisit)
+	v1Router.Post("/pageVisit", apiCfg.handlerCreatePageVisit)
+	v1Router.Post("/visits/7", apiCfg.handlerSevenVisits)
+	v1Router.Post("/visits/30", apiCfg.handlerLimitedVisits)
+	v1Router.Post("/visits/90", apiCfg.handlerNinetyVisits)
+	v1Router.Post("/login", apiCfg.handlerLogin)
+	v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+	v1Router.Post("/domain", apiCfg.middlewareAuth(apiCfg.handlerGetDomain))
+	v1Router.Post("/domains", apiCfg.middlewareAuth(apiCfg.handlerCreateDomain))
+	v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowCreate))
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerDomainFollowsGet))
-  v1Router.Get("/example/{id}", apiCfg.handlerGetFreeDomain)
-  v1Router.Post("/passChange",apiCfg.middlewareAuth(apiCfg.handlerChangePass))
-  v1Router.Post("/forgotPass", func(w http.ResponseWriter, r *http.Request) {
-    apiCfg.handlerForgotPass(w, r, emailCode)
-  })
-  v1Router.Post("/resetPass",apiCfg.HandlerInitPassReset)
-  r.Mount("/v1", v1Router)
+	v1Router.Get("/example/{id}", apiCfg.handlerGetFreeDomain)
+	v1Router.Post("/passChange", apiCfg.middlewareAuth(apiCfg.handlerChangePass))
+	v1Router.Post("/forgotPass", func(w http.ResponseWriter, r *http.Request) {
+		apiCfg.handlerForgotPass(w, r, emailCode)
+	})
+	v1Router.Get("/ws", handleConnections)
+	v1Router.Get("/wsCount", handleSocketCount)
+	v1Router.Post("/resetPass", apiCfg.HandlerInitPassReset)
+	r.Mount("/v1", v1Router)
 
 	fmt.Println("listening on port:" + portString)
 
