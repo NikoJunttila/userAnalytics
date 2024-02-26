@@ -28,7 +28,7 @@ func main() {
 		log.Fatal("port not found in env")
 	}
 	dbURL := os.Getenv("DB_URL")
-	if portString == "" {
+	if dbURL == "" {
 		log.Fatal("DB_URL is not found")
 	}
 	connection, err := sql.Open("postgres", dbURL)

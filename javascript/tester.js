@@ -13,10 +13,10 @@ function isNewUser() {
   }
   function setVisitTimestamp() {
     const currentTimestamp = new Date().getTime();
-    localStorage.setItem("lvt123", currentTimestamp.toString());
+    sessionStorage.setItem("lvt123", currentTimestamp.toString());
   }
   function hasVisitedWithinLast12Hours() {
-    const lastVisitTimestamp = localStorage.getItem("lvt123");
+    const lastVisitTimestamp = sessionStorage.getItem("lvt123");
     if (lastVisitTimestamp) {
       const currentTime = new Date().getTime();
       const lastVisitTime = parseInt(lastVisitTimestamp, 10);
