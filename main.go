@@ -80,7 +80,7 @@ func main() {
 		apiCfg.handlerForgotPass(w, r, emailCode)
 	})
 	v1Router.Get("/ws", handleConnections)
-	v1Router.Get("/wsCount", handleSocketCount)
+	//v1Router.Get("/wsCount", handleSendCount)
 	v1Router.Post("/resetPass", apiCfg.HandlerInitPassReset)
 	r.Mount("/v1", v1Router)
 

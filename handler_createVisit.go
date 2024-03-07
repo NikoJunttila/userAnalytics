@@ -35,7 +35,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
-  }
+	}
 	type parameters struct {
 		VisitStat     string    `json:"status"`
 		VisitDuration int32     `json:"visitDuration"`
@@ -57,13 +57,13 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	if err != nil || len(cleanedRef) > 2 {
 		cleanedRef = "Direct visit"
 	}
-  bounced := false
-  if params.VisitDuration < 5{
-    bounced = true
-  }
-  if params.VisitDuration > 7500 {
-    params.VisitDuration = 300
-  }
+	bounced := false
+	if params.VisitDuration < 5 {
+		bounced = true
+	}
+	if params.VisitDuration > 7500 {
+		params.VisitDuration = 300
+	}
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {
@@ -76,7 +76,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 			Device:        params.Device,
 			Os:            params.OS,
 			Browser:       params.Browser,
-      Bounce:        bounced,
+			Bounce:        bounced,
 		})
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
@@ -128,10 +128,10 @@ func (apiCfg *apiConfig) handlerCreatePageVisit(w http.ResponseWriter, r *http.R
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
-  }
+	}
 	type parameters struct {
-		Domain        uuid.UUID `json:"domain"`
-		Page     string    `json:"page"`
+		Domain uuid.UUID `json:"domain"`
+		Page   string    `json:"page"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -141,19 +141,19 @@ func (apiCfg *apiConfig) handlerCreatePageVisit(w http.ResponseWriter, r *http.R
 		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))
 		return
 	}
-  pageName, err := getPageNameFromURL(params.Page) 
-  if err != nil || len(pageName) == 0 {
-    pageName = "/"
-  }
-  _, err = apiCfg.DB.CreatePageVisit(r.Context(), database.CreatePageVisitParams{
-    Createdat:     time.Now().UTC(),
-    Domain: params.Domain,
-    Page: pageName, 
-  })
-  if err != nil {
-    fmt.Printf("error with pagevisit: %v \n",err)
-    return
-  }
+	pageName, err := getPageNameFromURL(params.Page)
+	if err != nil || len(pageName) == 0 {
+		pageName = "/"
+	}
+	_, err = apiCfg.DB.CreatePageVisit(r.Context(), database.CreatePageVisitParams{
+		Createdat: time.Now().UTC(),
+		Domain:    params.Domain,
+		Page:      pageName,
+	})
+	if err != nil {
+		fmt.Printf("error with pagevisit: %v \n", err)
+		return
+	}
 	respondWithJson(w, 200, "success")
 }
 
@@ -212,7 +212,7 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}()
-  var bounceRate float64 
+	var bounceRate float64
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -222,7 +222,7 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}()
-  var pages []database.GetPages7Row 
+	var pages []database.GetPages7Row
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -233,21 +233,21 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 		}
 	}()
 	type response struct {
-		Original []database.GetSevenDaysRow     `json:"original"`
-		Os       []database.GetOsCount7Row      `json:"os"`
-		Device   []database.GetDeviceCount7Row  `json:"device"`
-		Browser  []database.GetBrowserCount7Row `json:"browser"`
-    BounceRate float64                      `json:"bounce"` 
-    Pages []database.GetPages7Row           `json:"pages"`
+		Original   []database.GetSevenDaysRow     `json:"original"`
+		Os         []database.GetOsCount7Row      `json:"os"`
+		Device     []database.GetDeviceCount7Row  `json:"device"`
+		Browser    []database.GetBrowserCount7Row `json:"browser"`
+		BounceRate float64                        `json:"bounce"`
+		Pages      []database.GetPages7Row        `json:"pages"`
 	}
 	wg.Wait()
 	resp := response{
-		Original: stats,
-		Os:       os,
-		Device:   device,
-		Browser:  browser,
-    BounceRate: bounceRate,
-    Pages: pages,
+		Original:   stats,
+		Os:         os,
+		Device:     device,
+		Browser:    browser,
+		BounceRate: bounceRate,
+		Pages:      pages,
 	}
 	elapsed := time.Since(startTime)
 	fmt.Printf("my waitgroup funcs took %s\n", elapsed)
@@ -277,12 +277,12 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error for Os")
 		return
 	}
-  pages, err := apiCfg.DB.GetPages30(r.Context(), params.DomainID)
-  if err != nil {
-    fmt.Println(err)
+	pages, err := apiCfg.DB.GetPages30(r.Context(), params.DomainID)
+	if err != nil {
+		fmt.Println(err)
 		respondWithError(w, http.StatusInternalServerError, "DB error for pages")
-    return
-  }
+		return
+	}
 	device, err := apiCfg.DB.GetDeviceCount30(r.Context(), params.DomainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error for Device")
@@ -294,37 +294,36 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
 		return
 	}
-  bounceRate, err := apiCfg.DB.GetBounce30(r.Context(), params.DomainID)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "DB error")
-			return
-		}
+	bounceRate, err := apiCfg.DB.GetBounce30(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+		return
+	}
 
 	type response30 struct {
-		Original []database.GetLimitedCountRow   `json:"original"`
-		Os       []database.GetOsCount30Row      `json:"os"`
-		Device   []database.GetDeviceCount30Row  `json:"device"`
-		Browser  []database.GetBrowserCount30Row `json:"browser"`
-    BounceRate float64                      `json:"bounce"`
-    Pages []database.GetPages30Row  `json:"pages"`
+		Original   []database.GetLimitedCountRow   `json:"original"`
+		Os         []database.GetOsCount30Row      `json:"os"`
+		Device     []database.GetDeviceCount30Row  `json:"device"`
+		Browser    []database.GetBrowserCount30Row `json:"browser"`
+		BounceRate float64                         `json:"bounce"`
+		Pages      []database.GetPages30Row        `json:"pages"`
 	}
 
 	resp := response30{
-		Original: stats,
-		Os:       os,
-		Device:   device,
-		Browser:  browser,
-    BounceRate: bounceRate,
-    Pages: pages,
+		Original:   stats,
+		Os:         os,
+		Device:     device,
+		Browser:    browser,
+		BounceRate: bounceRate,
+		Pages:      pages,
 	}
-  fmt.Println(pages)
 	elapsed := time.Since(startTime)
 	fmt.Printf("my normal func took %s\n", elapsed)
 	respondWithJson(w, 200, resp)
 }
 
 func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
-type parameters struct {
+	type parameters struct {
 		DomainID uuid.UUID `json:"domain_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
@@ -356,33 +355,33 @@ type parameters struct {
 		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
 		return
 	}
-  bounceRate, err := apiCfg.DB.GetBounce90(r.Context(), params.DomainID)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "DB error")
-			return
-		}
-  pages, err := apiCfg.DB.GetPages90(r.Context(), params.DomainID)
-  if err != nil {
-    fmt.Println(err)
+	bounceRate, err := apiCfg.DB.GetBounce90(r.Context(), params.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "DB error")
+		return
+	}
+	pages, err := apiCfg.DB.GetPages90(r.Context(), params.DomainID)
+	if err != nil {
+		fmt.Println(err)
 		respondWithError(w, http.StatusInternalServerError, "DB error for pages")
-    return
-  }
+		return
+	}
 	type response30 struct {
-		Original []database.GetNinetyDaysRow   `json:"original"`
-		Os       []database.GetOsCount90Row      `json:"os"`
-		Device   []database.GetDeviceCount90Row  `json:"device"`
-		Browser  []database.GetBrowserCount90Row `json:"browser"`
-    BounceRate float64                      `json:"bounce"` 
-    Pages []database.GetPages90Row `json:"pages"`
-  }
+		Original   []database.GetNinetyDaysRow     `json:"original"`
+		Os         []database.GetOsCount90Row      `json:"os"`
+		Device     []database.GetDeviceCount90Row  `json:"device"`
+		Browser    []database.GetBrowserCount90Row `json:"browser"`
+		BounceRate float64                         `json:"bounce"`
+		Pages      []database.GetPages90Row        `json:"pages"`
+	}
 
 	resp := response30{
-		Original: stats,
-		Os:       os,
-		Device:   device,
-		Browser:  browser,
-    BounceRate: bounceRate,
-    Pages: pages,
+		Original:   stats,
+		Os:         os,
+		Device:     device,
+		Browser:    browser,
+		BounceRate: bounceRate,
+		Pages:      pages,
 	}
 	respondWithJson(w, 200, resp)
 

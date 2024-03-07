@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -16,35 +17,48 @@ var (
 			return true // Allow all origins
 		},
 	}
-
 	clientCount = 0
+	clients     = make(map[*websocket.Conn]bool)
+	mutex       sync.Mutex
 )
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade initial GET request to a WebSocket
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer ws.Close()
-	// Increment client count on connection
+
+	mutex.Lock()
+	clients[ws] = true
 	clientCount++
-	// Send current count to the new client
-	ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("%d", clientCount)))
+	mutex.Unlock()
+
+	broadcastClientCount()
+
 	for {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
-			// Decrement client count on disconnection
+			mutex.Lock()
+			delete(clients, ws)
 			clientCount--
+			mutex.Unlock()
+			broadcastClientCount()
 			break
 		}
 	}
 }
-func handleSocketCount(w http.ResponseWriter, r *http.Request) {
-	respondWithJson(w, 200, clientCount)
-}
 
-// func main() {
-// 	http.HandleFunc("/ws", handleConnections)
-// 	log.Fatal(http.ListenAndServe(":8080", nil))
-// }
+func broadcastClientCount() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	for client := range clients {
+		err := client.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("%d", clientCount)))
+		if err != nil {
+			log.Println("Error sending client count:", err)
+			client.Close()
+			delete(clients, client)
+		}
+	}
+}
