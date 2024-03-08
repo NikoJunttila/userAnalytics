@@ -48,6 +48,30 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+func handleSendCount(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ws.Close()
+
+	mutex.Lock()
+	clients[ws] = true
+	mutex.Unlock()
+
+	broadcastClientCount()
+
+	for {
+		_, _, err := ws.ReadMessage()
+		if err != nil {
+			mutex.Lock()
+			delete(clients, ws)
+			mutex.Unlock()
+			broadcastClientCount()
+			break
+		}
+	}
+}
 
 func broadcastClientCount() {
 	mutex.Lock()
