@@ -54,7 +54,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	cleanedRef, err := extractDomain(params.VisitFrom)
-	if err != nil || len(cleanedRef) > 2 {
+	if err != nil || len(cleanedRef) < 2 {
 		cleanedRef = "Direct visit"
 	}
 	bounced := false
