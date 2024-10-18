@@ -14,7 +14,6 @@ import (
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
-// NOBODY LOOK HERE SECRET STUFF AND NOT SUPER BAD CODE
 func extractDomain(referrer string) (string, error) {
 	if referrer == "Direct visit" {
 		return referrer, nil
@@ -31,6 +30,8 @@ func extractDomain(referrer string) (string, error) {
 
 	return parsedURL.Hostname(), nil
 }
+
+// NOBODY LOOK HERE SECRET STUFF AND NOT SUPER BAD CODE
 func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
