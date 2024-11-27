@@ -96,7 +96,7 @@ function isNewUser() {
     }
     return os;
   }
-  const serverURL = "https://centria.randomderp.org/v1/";
+  const serverURL = "https://analytics.junttila.dev/v1/";
   function analytics(domainID) {
     if (testLocal() || hasVisitedWithinLast12Hours()) {
       return;
