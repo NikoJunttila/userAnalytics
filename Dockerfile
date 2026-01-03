@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM docker.io/golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o analytics-app .
 
 # Final stage
-FROM alpine:latest
+FROM docker.io/alpine:latest
 
 RUN apk --no-cache add ca-certificates tzdata
 
