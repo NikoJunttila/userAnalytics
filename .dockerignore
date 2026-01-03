@@ -1,0 +1,11 @@
+.git
+.env
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+node_modules
+bin
+obj
+# Remove vendor from here so docker can copy it
+# vendor
