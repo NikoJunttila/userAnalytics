@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,17 +28,28 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	hashPassword := hashAndSalt([]byte(params.Password))
-	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
-		ID:        uuid.New(),
+
+	apiKeyBytes := make([]byte, 32)
+	_, err = rand.Read(apiKeyBytes)
+	if err != nil {
+		respondWithError(w, 500, "could not generate api key")
+		return
+	}
+	apiKey := hex.EncodeToString(apiKeyBytes)
+
+	userID := uuid.New().String()
+	err = apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
+		ID:        userID,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Name:      "placeholder",
+		ApiKey:    apiKey,
 		Email:     params.Email,
 		Passhash:  hashPassword,
 	})
 
 	if err != nil {
-		if err.Error() == "pq: duplicate key value violates unique constraint \"users_email_key\"" {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: users.email") {
 			respondWithError(w, 400, "Email already taken")
 			return
 		}
@@ -43,6 +57,12 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		errMsg := fmt.Sprintf("error with DB: %v", err)
 		fmt.Println(errMsg)
 		respondWithError(w, 400, errMsg)
+		return
+	}
+
+	user, err := apiCfg.DB.GetUserByEmail(r.Context(), params.Email)
+	if err != nil {
+		respondWithError(w, 500, fmt.Sprintf("error fetching created user: %v", err))
 		return
 	}
 

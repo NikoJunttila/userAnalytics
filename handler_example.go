@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/google/uuid"
-	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
 func (apiCfg *apiConfig) handlerGetFreeDomain(w http.ResponseWriter, r *http.Request) {
@@ -15,14 +13,13 @@ func (apiCfg *apiConfig) handlerGetFreeDomain(w http.ResponseWriter, r *http.Req
 	     Unique float64 `json:"unique"`
 	     } */
 	type extendDomain struct {
-		database.Domain
+		Domain
 		Total  float64 `json:"total"`
 		Unique float64 `json:"unique"`
 	}
-	domainIDString := chi.URLParam(r, "id")
-	domainID, err := uuid.Parse(domainIDString)
-	if err != nil {
-		fmt.Println("Error parsing UUID:", err)
+	domainID := chi.URLParam(r, "id")
+	if domainID == "" {
+		fmt.Println("No domain ID in URL")
 		return
 	}
 	domain, err := apiCfg.DB.GetDomain(r.Context(), domainID)
@@ -39,7 +36,7 @@ func (apiCfg *apiConfig) handlerGetFreeDomain(w http.ResponseWriter, r *http.Req
 	stats2, err := apiCfg.DB.GetPrevMonthStats(r.Context(), domainID)
 	if err != nil || stats2.TotalCount == 0 {
 		var infinite extendDomain
-		infinite.Domain = domain
+		infinite.Domain = databaseDomainToDomain(domain)
 		infinite.Total = 0.0
 		infinite.Unique = 0.0
 		respondWithJson(w, 200, infinite)
@@ -48,6 +45,6 @@ func (apiCfg *apiConfig) handlerGetFreeDomain(w http.ResponseWriter, r *http.Req
 	var stats extendDomain
 	stats.Total = percentageDiff(stats1.TotalCount, stats2.TotalCount)
 	stats.Unique = percentageDiff(stats1.NewVisitorCount, stats2.NewVisitorCount)
-	stats.Domain = domain
+	stats.Domain = databaseDomainToDomain(domain)
 	respondWithJson(w, 200, stats)
 }

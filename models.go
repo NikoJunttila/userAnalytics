@@ -3,12 +3,11 @@ package main
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
+	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Name      string    `json:"name"`
@@ -59,9 +58,28 @@ func databaseCurrentUser(dbUser database.User) CurretUser {
 	}
 }
 
-/* func databaseCreateDomain(name string, domainID string) DomainCreate{
-  return DomainCreate{
-    Name: name,
-    DomainId: domainID,
-  }
-} */
+func databaseDomainToDomain(dbDomain database.Domain) Domain {
+	return Domain{
+		ID:          dbDomain.ID,
+		OwnerID:     dbDomain.OwnerID,
+		Name:        dbDomain.Name,
+		Url:         dbDomain.Url,
+		TotalVisits: dbDomain.TotalVisits,
+		TotalUnique: dbDomain.TotalUnique,
+		TotalTime:   dbDomain.TotalTime,
+		CreatedAt:   dbDomain.CreatedAt,
+		UpdatedAt:   dbDomain.UpdatedAt,
+	}
+}
+
+type Domain struct {
+	ID          string    `json:"id"`
+	OwnerID     string    `json:"owner_id"`
+	Name        string    `json:"name"`
+	Url         string    `json:"url"`
+	TotalVisits int64     `json:"total_visits"`
+	TotalUnique int64     `json:"total_unique"`
+	TotalTime   int64     `json:"total_time"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}

@@ -22,9 +22,9 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))
 		return
 	}
-	domainUUID := uuid.New()
-	domain, err := apiCfg.DB.CreateDomain(r.Context(), database.CreateDomainParams{
-		ID:          domainUUID,
+	domainID := uuid.New().String()
+	err = apiCfg.DB.CreateDomain(r.Context(), database.CreateDomainParams{
+		ID:          domainID,
 		OwnerID:     user.ID,
 		Name:        params.Name,
 		Url:         params.Url,
@@ -35,18 +35,24 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
 		UpdatedAt:   time.Now().UTC(),
 	})
 	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("error parsing JSON: %v", err))
+		respondWithError(w, 400, fmt.Sprintf("error creating domain: %v", err))
 		return
 	}
-	_, err = apiCfg.DB.CreateDomainFollow(r.Context(), database.CreateDomainFollowParams{
-		ID:         uuid.New(),
+	err = apiCfg.DB.CreateDomainFollow(r.Context(), database.CreateDomainFollowParams{
+		ID:         uuid.New().String(),
 		CreatedAt:  time.Now().UTC(),
 		UserID:     user.ID,
-		DomainID:   domainUUID,
+		DomainID:   domainID,
 		DomainName: params.Name,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error: %v", err))
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error following domain: %v", err))
+		return
+	}
+
+	domain, err := apiCfg.DB.GetDomain(r.Context(), domainID)
+	if err != nil {
+		respondWithError(w, 500, fmt.Sprintf("error fetching created domain: %v", err))
 		return
 	}
 
@@ -54,7 +60,7 @@ func (apiCfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Requ
 }
 func (apiCfg *apiConfig) handlerGetDomain(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
-		DomainID uuid.UUID `json:"domain_id"`
+		DomainID string `json:"domain_id"`
 	}
 	/*   type compare struct {
 	     Total float64 `json:"total"`

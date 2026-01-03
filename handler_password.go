@@ -68,10 +68,11 @@ func (apiCfg *apiConfig) handlerForgotPass(w http.ResponseWriter, r *http.Reques
 	// Set expiration time (e.g., 1 hour from now)
 	expirationTime := time.Now().Add(time.Hour)
 
-	_, err = apiCfg.DB.CreatePasswordReset(r.Context(), database.CreatePasswordResetParams{
+	resetID := uuid.New().String()
+	err = apiCfg.DB.CreatePasswordReset(r.Context(), database.CreatePasswordResetParams{
 		Token:      token,
 		Email:      recipient,
-		ID:         uuid.New(),
+		ID:         resetID,
 		Valid:      true,
 		Expiration: expirationTime,
 	})

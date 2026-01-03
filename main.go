@@ -11,8 +11,9 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/nikojunttila/userAnalytics/internal/database"
+	"github.com/pressly/goose/v3"
 
-	_ "github.com/lib/pq"
+	_ "modernc.org/sqlite"
 )
 
 type apiConfig struct {
@@ -31,10 +32,20 @@ func main() {
 	if dbURL == "" {
 		log.Fatal("DB_URL is not found")
 	}
-	connection, err := sql.Open("postgres", dbURL)
+	connection, err := sql.Open("sqlite", dbURL)
 	if err != nil {
 		log.Fatal("cant connect to database", err)
 	}
+
+	// Run migrations
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		log.Fatal("failed to set goose dialect", err)
+	}
+
+	if err := goose.Up(connection, "sql/schema"); err != nil {
+		log.Fatal("failed to run migrations", err)
+	}
+
 	apiCfg := apiConfig{
 		DB: database.New(connection),
 	}

@@ -1,28 +1,24 @@
--- name: CreatePageVisit :one
-INSERT INTO pagevisits(createdat,domain,page)
-VALUES($1,$2,$3)
-RETURNING *;
---
+-- name: CreatePageVisit :exec
+INSERT INTO pagevisits (createdAt, domain, page)
+VALUES (?, ?, ?);
 
 -- name: GetPages7 :many
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '7 days'
+WHERE domain = ? AND createdAt >= date('now', '-7 days')
 GROUP BY page
 ORDER BY page_count DESC;
---
 
 -- name: GetPages30 :many
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '30 days'
+WHERE domain = ? AND createdAt >= date('now', '-30 days')
 GROUP BY page
 ORDER BY page_count DESC;
---
+
 -- name: GetPages90 :many
 SELECT page, COUNT(*) as page_count
 FROM pagevisits
-WHERE domain = $1 AND createdat >= CURRENT_DATE - INTERVAL '90 days'
+WHERE domain = ? AND createdAt >= date('now', '-90 days')
 GROUP BY page
 ORDER BY page_count DESC;
---

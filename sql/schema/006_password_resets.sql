@@ -1,7 +1,7 @@
 -- +goose Up 
 
 CREATE TABLE password_resets (
-  id UUID PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   expiration TIMESTAMP NOT NULL,
   email TEXT NOT NULL,
   valid BOOL NOT NULL,

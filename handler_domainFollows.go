@@ -10,8 +10,8 @@ import (
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
-func (cfg *apiConfig) handlerDomainFollowsGet(w http.ResponseWriter, r *http.Request, user database.User) {
-	domainFollows, err := cfg.DB.GetDomainsForUser(r.Context(), user.ID)
+func (apiCfg *apiConfig) handlerDomainFollowsGet(w http.ResponseWriter, r *http.Request, user database.User) {
+	domainFollows, err := apiCfg.DB.GetDomainsForUser(r.Context(), user.ID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get feeds")
 		return
@@ -20,10 +20,9 @@ func (cfg *apiConfig) handlerDomainFollowsGet(w http.ResponseWriter, r *http.Req
 	respondWithJson(w, 200, domainFollows)
 }
 
-func (cfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
-		DomainID uuid.UUID `json:"domain_id"`
-		//DomainName string `json:"domain_name"`
+		DomainID string `json:"domain_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -32,9 +31,10 @@ func (cfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.R
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
-	domain, _ := cfg.DB.GetDomain(r.Context(), params.DomainID)
-	domainFollow, err := cfg.DB.CreateDomainFollow(r.Context(), database.CreateDomainFollowParams{
-		ID:         uuid.New(),
+	domain, _ := apiCfg.DB.GetDomain(r.Context(), params.DomainID)
+	domainFollowID := uuid.New().String()
+	err = apiCfg.DB.CreateDomainFollow(r.Context(), database.CreateDomainFollowParams{
+		ID:         domainFollowID,
 		CreatedAt:  time.Now().UTC(),
 		UserID:     user.ID,
 		DomainID:   params.DomainID,
@@ -44,6 +44,14 @@ func (cfg *apiConfig) handlerDomainFollowCreate(w http.ResponseWriter, r *http.R
 		fmt.Println(err)
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create feed follow")
 		return
+	}
+
+	domainFollow := database.DomainFollow{
+		ID:         domainFollowID,
+		CreatedAt:  time.Now().UTC(),
+		UserID:     user.ID,
+		DomainID:   params.DomainID,
+		DomainName: domain.Name,
 	}
 
 	respondWithJson(w, 201, domainFollow)

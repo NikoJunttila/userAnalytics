@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/nikojunttila/userAnalytics/internal/database"
 )
 
@@ -38,13 +37,13 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	type parameters struct {
-		VisitStat     string    `json:"status"`
-		VisitDuration int32     `json:"visitDuration"`
-		Domain        uuid.UUID `json:"domain"`
-		VisitFrom     string    `json:"visitFrom"`
-		Browser       string    `json:"browser"`
-		Device        string    `json:"device"`
-		OS            string    `json:"os"`
+		VisitStat     string `json:"status"`
+		VisitDuration int32  `json:"visitDuration"`
+		Domain        string `json:"domain"`
+		VisitFrom     string `json:"visitFrom"`
+		Browser       string `json:"browser"`
+		Device        string `json:"device"`
+		OS            string `json:"os"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -68,10 +67,10 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 	dbCtx := context.Background()
 	// Asynchronously save the visit to the database
 	go func() {
-		_, err := apiCfg.DB.CreateVisit(dbCtx, database.CreateVisitParams{
+		err := apiCfg.DB.CreateVisit(dbCtx, database.CreateVisitParams{
 			Createdat:     time.Now().UTC(),
 			Visitorstatus: params.VisitStat,
-			Visitduration: params.VisitDuration,
+			Visitduration: int64(params.VisitDuration),
 			Domain:        params.Domain,
 			Visitfrom:     cleanedRef,
 			Device:        params.Device,
@@ -89,7 +88,7 @@ func (apiCfg *apiConfig) handlerCreateVisit(w http.ResponseWriter, r *http.Reque
 		err = apiCfg.DB.UpdateDomain(dbCtx, database.UpdateDomainParams{
 			ID:          params.Domain,
 			TotalVisits: 1,
-			TotalUnique: uniqueVisit,
+			TotalUnique: int64(uniqueVisit),
 		})
 		if err != nil {
 			fmt.Printf("error: %v \n", err)
@@ -131,8 +130,8 @@ func (apiCfg *apiConfig) handlerCreatePageVisit(w http.ResponseWriter, r *http.R
 		return
 	}
 	type parameters struct {
-		Domain uuid.UUID `json:"domain"`
-		Page   string    `json:"page"`
+		Domain string `json:"domain"`
+		Page   string `json:"page"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -146,7 +145,7 @@ func (apiCfg *apiConfig) handlerCreatePageVisit(w http.ResponseWriter, r *http.R
 	if err != nil || len(pageName) == 0 {
 		pageName = "/"
 	}
-	_, err = apiCfg.DB.CreatePageVisit(r.Context(), database.CreatePageVisitParams{
+	err = apiCfg.DB.CreatePageVisit(r.Context(), database.CreatePageVisitParams{
 		Createdat: time.Now().UTC(),
 		Domain:    params.Domain,
 		Page:      pageName,
@@ -163,7 +162,7 @@ func (apiCfg *apiConfig) handlerCreatePageVisit(w http.ResponseWriter, r *http.R
 func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	type parameters struct {
-		DomainID uuid.UUID `json:"domain_id"`
+		DomainID string `json:"domain_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -217,10 +216,13 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		bounceRate, err = apiCfg.DB.GetBounce7(r.Context(), params.DomainID)
+		br, err := apiCfg.DB.GetBounce7(r.Context(), params.DomainID)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "DB error")
 			return
+		}
+		if val, ok := br.(float64); ok {
+			bounceRate = val
 		}
 	}()
 	var pages []database.GetPages7Row
@@ -259,7 +261,7 @@ func (apiCfg *apiConfig) handlerSevenVisits(w http.ResponseWriter, r *http.Reque
 func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	type parameters struct {
-		DomainID uuid.UUID `json:"domain_id"`
+		DomainID string `json:"domain_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -295,10 +297,14 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
 		return
 	}
-	bounceRate, err := apiCfg.DB.GetBounce30(r.Context(), params.DomainID)
+	br, err := apiCfg.DB.GetBounce30(r.Context(), params.DomainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
+	}
+	var bounceRate float64
+	if val, ok := br.(float64); ok {
+		bounceRate = val
 	}
 
 	type response30 struct {
@@ -325,7 +331,7 @@ func (apiCfg *apiConfig) handlerLimitedVisits(w http.ResponseWriter, r *http.Req
 
 func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		DomainID uuid.UUID `json:"domain_id"`
+		DomainID string `json:"domain_id"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -356,10 +362,14 @@ func (apiCfg *apiConfig) handlerNinetyVisits(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusInternalServerError, "DB error for Browser")
 		return
 	}
-	bounceRate, err := apiCfg.DB.GetBounce90(r.Context(), params.DomainID)
+	br, err := apiCfg.DB.GetBounce90(r.Context(), params.DomainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "DB error")
 		return
+	}
+	var bounceRate float64
+	if val, ok := br.(float64); ok {
+		bounceRate = val
 	}
 	pages, err := apiCfg.DB.GetPages90(r.Context(), params.DomainID)
 	if err != nil {
