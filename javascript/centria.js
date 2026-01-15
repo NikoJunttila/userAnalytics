@@ -96,7 +96,7 @@ function isNewUser() {
     }
     return os;
   }
-  const serverURL = "https://oppari.junttila.dev/v1/";
+  const serverURL = "https://backend.pi.junttila.dev/v1/";
   function analytics(domainID) {
     if (testLocal() || hasVisitedWithinLast12Hours()) {
       return;
